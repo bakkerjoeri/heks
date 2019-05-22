@@ -4,11 +4,12 @@ import isEmptyObject from './utilities/isEmptyObject.js';
 import isObject from './utilities/isObject.js';
 import isPlainObject from './utilities/isPlainObject.js';
 import objectWithout from './utilities/objectWithout.js';
+import arrayWithout from './utilities/arrayWithout.js';
 
 export default class Hex {
     constructor(modules = {}) {
         this.rooms = {};
-        this.currentRoomId;
+        this.currentRoomId = null;
         this.entities = {};
         this.componentsMap = {};
         this.eventHandlers = {};
@@ -38,7 +39,7 @@ export default class Hex {
         };
 
         if (setAsCurrent) {
-            this.currentRoomId = newRoom.id;
+            this.setCurrentRoom(newRoom.id);
         }
     }
 
@@ -57,6 +58,14 @@ export default class Hex {
                 ],
             },
         };
+    }
+
+    setCurrentRoom(roomId) {
+        if (!this.rooms.hasOwnProperty(roomId)) {
+            throw new Error(`Room with id ${roomId} doesn't exist.`);
+        }
+
+        this.currentRoomId = roomId;
     }
 
     get currentRoom() {
@@ -78,6 +87,16 @@ export default class Hex {
     }
 
     removeEntity(entityId) {
+        this.rooms = Object.entries(this.rooms).reduce((rooms, [roomId, room]) => {
+            return {
+                ...rooms,
+                [roomId]: {
+                    ...room,
+                    entities: arrayWithout(room.entities, entityId),
+                }
+            }
+        }, {});
+
         this.removeComponentsFromEntity(entityId);
         this.entities = objectWithout(this.entities, entityId);
     }
@@ -97,7 +116,7 @@ export default class Hex {
 
         return Object.entries(entityFilter).reduce((entityIds, [componentName, filterValue]) => {
             if (!this.componentsMap.hasOwnProperty(componentName)) {
-                return entityIds;
+                return filterValue ? [] : entityIds;
             }
 
             return entityIds.filter((entityId) => {
@@ -108,34 +127,15 @@ export default class Hex {
                     return filterValue(this.componentsMap[componentName][entityId]);
                 }
 
-                return filterValue === this.componentsMap[componentName].hasOwnProperty(entityId);
+                if (!filterValue) {
+                    return !this.componentsMap[componentName].hasOwnProperty(entityId) ||
+                        !this.componentsMap[componentName][entityId];
+                }
+
+                return this.componentsMap[componentName].hasOwnProperty(entityId) &&
+                    this.componentsMap[componentName][entityId];
             });
         }, this.currentRoom.entities).map((entityId) => {
-            return this.getEntity(entityId);
-        });
-    }
-
-    getEntitiesEverywhere(entityFilter = {}) {
-        if (!isObject(entityFilter)) {
-            throw new Error(`entityFilter is expected to be an object, received ${typeof entityFilter} instead.`);
-        }
-
-        return Object.entries(entityFilter).reduce((entityIds, [componentName, filterValue]) => {
-            if (!this.componentsMap.hasOwnProperty(componentName)) {
-                return entityIds;
-            }
-
-            return entityIds.filter((entityId) => {
-                if (
-                    typeof filterValue === 'function' &&
-                    this.componentsMap[componentName].hasOwnProperty(entityId)
-                ) {
-                    return filterValue(this.componentsMap[componentName][entityId]);
-                }
-
-                return filterValue === this.componentsMap[componentName].hasOwnProperty(entityId);
-            });
-        }, Object.keys(this.entities)).map((entityId) => {
             return this.getEntity(entityId);
         });
     }
@@ -154,7 +154,7 @@ export default class Hex {
         }
     }
 
-    setComponentsForEntity(components, entityId) {
+    setComponentsForEntity(components = {}, entityId) {
         if (!isPlainObject(components)) {
             throw new Error('Cannot create components from given value. Please provide a plain object.');
         }

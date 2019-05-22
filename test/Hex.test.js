@@ -9,53 +9,55 @@ beforeEach(() => {
 
 describe('Hex', () => {
     describe('getEntities', () => {
-        test('Returns filtered entities.', () => {
+        test('Returns all entities when no filter is given.', () => {
             hex.createEntity();
             hex.createEntity();
             expect(Object.keys(hex.getEntities()).length).toEqual(2);
         });
 
-        test('Returns an empty array when no entities are found.', () => {
-            expect(Object.keys(hex.getEntities()).length).toEqual(0);
-
-            hex.createEntity({item: true});
-            hex.createEntity({creature: true});
-            expect(Object.keys(hex.getEntities({structure: true})).length).toEqual(2);
-        });
-
-        test('Returns all existing entities when no filter is given.', () => {
+        test('Returns the correct entities for a positive filter.', () => {
             hex.createEntity({
                 player: true,
+                creature: true,
             });
             hex.createEntity({
                 enemy: true,
+                creature: true,
             });
             hex.createEntity({
                 enemy: true,
+                creature: false,
             });
             expect(Object.keys(hex.getEntities({
                 enemy: true,
             })).length).toEqual(2);
-        });
-
-        test('Returns entities excluding those matching a negative filter.', () => {
-            hex.createEntity({
-                creature: true,
-                isDead: true,
-            });
-            hex.createEntity({
-                creature: true,
-            });
-            hex.createEntity({
-                creature: true,
-            });
             expect(Object.keys(hex.getEntities({
                 creature: true,
-                isDead: false,
             })).length).toEqual(2);
         });
 
-        test('Returns entities based on function filters.', () => {
+        test('Returns the correct entities for a negative filter.', () => {
+            hex.createEntity({
+                player: true,
+                creature: true,
+            });
+            hex.createEntity({
+                enemy: true,
+                creature: true,
+            });
+            hex.createEntity({
+                enemy: true,
+                creature: false,
+            });
+            expect(Object.keys(hex.getEntities({
+                enemy: false,
+            })).length).toEqual(1);
+            expect(Object.keys(hex.getEntities({
+                creature: false,
+            })).length).toEqual(1);
+        });
+
+        test('Returns the correct entities for a function filters.', () => {
             hex.createEntity({
                 health: 10,
             });
@@ -65,6 +67,37 @@ describe('Hex', () => {
             expect(Object.keys(hex.getEntities({
                 health: (currentHealth) => { return currentHealth > 5; },
             })).length).toEqual(1);
+        });
+
+        test('Returns an empty array when no entities are found.', () => {
+            expect(Object.keys(hex.getEntities()).length).toEqual(0);
+
+            hex.createEntity({creature: true, health: 4});
+            expect(Object.keys(hex.getEntities({ health: (value) => value < 3 })).length).toEqual(0);
+        });
+
+        test('Returns an empty array when applying a positive filter for a nonexistant component.', () => {
+            hex.createEntity({
+                player: true,
+            });
+            hex.createEntity({
+                enemy: true,
+            });
+            expect(Object.keys(hex.getEntities({
+                structure: true,
+            })).length).toEqual(0);
+        });
+
+        test('Returns all entities when applying a negative filter for a nonexistant component.', () => {
+            hex.createEntity({
+                player: true,
+            });
+            hex.createEntity({
+                enemy: true,
+            });
+            expect(Object.keys(hex.getEntities({
+                structure: false,
+            })).length).toEqual(2);
         });
 
         test('Throws an error when `entityFilter` is not an object.', () => {

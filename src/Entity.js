@@ -52,7 +52,13 @@ export default function Entity(engine, entityId = createUuid()) {
             };
         },
         defineProperty(target, property, descriptor) {
+            if (target.hasOwnProperty(property)) {
+                return Reflect.defineProperty(target, property, descriptor);
+            }
+            
             target.engine.setComponentForEntity(property, descriptor.value, target.id);
+            
+            return true;
         },
         deleteProperty: (target, property) => {
             if (property === 'id' || property === 'engine') {
