@@ -11,6 +11,7 @@ export default class Hex {
         this.isRunning = false;
         this.rooms = {};
         this.currentRoomId = null;
+        this.viewports = {};
         this.entities = {};
         this.componentsMap = {};
         this.eventHandlers = {};
@@ -64,6 +65,7 @@ export default class Hex {
             id,
             size,
             entities: [],
+            viewports: [],
         };
 
         this.rooms = {
@@ -74,6 +76,35 @@ export default class Hex {
         if (setAsCurrent) {
             this.setCurrentRoom(newRoom.id);
         }
+    }
+
+    setCurrentRoom(roomId) {
+        if (!this.rooms.hasOwnProperty(roomId)) {
+            throw new Error(`Room with id ${roomId} doesn't exist.`);
+        }
+
+        this.currentRoomId = roomId;
+    }
+
+    get currentRoom() {
+        return this.rooms[this.currentRoomId];
+    }
+
+    addViewportToRoom(roomId, viewportId) {
+        if (!this.rooms.hasOwnProperty(roomId)) {
+            throw new Error(`Can't find room with ID "${roomId}".`);
+        }
+
+        this.rooms = {
+            ...this.rooms,
+            [roomId]: {
+                ...this.rooms[roomId],
+                viewports: [
+                    ...this.rooms[roomId].viewports,
+                    viewportId,
+                ],
+            },
+        };
     }
 
     addEntityToRoom(roomId, entityId) {
@@ -93,16 +124,37 @@ export default class Hex {
         };
     }
 
-    setCurrentRoom(roomId) {
-        if (!this.rooms.hasOwnProperty(roomId)) {
-            throw new Error(`Room with id ${roomId} doesn't exist.`);
+    createViewport(properties, roomId = this.currentRoomId) {
+        const DEFAULT_PROPERTIES = {
+            id: createUuid(),
+            position: {
+                x: 0,
+                y: 0,
+            },
+            origin: {
+                x: 0,
+                y: 0,
+            },
+            size: {
+                width: 0,
+                height: 0,
+            },
+            isActive: true,
+            entityToFollow: '',
+        };
+
+        const viewport = {
+            ...DEFAULT_PROPERTIES,
+            ...properties
+        };
+
+        this.viewports = {
+            ...this.viewports,
+            [viewport.id]: viewport,
         }
+        this.addViewportToRoom(roomId, viewport.id);
 
-        this.currentRoomId = roomId;
-    }
-
-    get currentRoom() {
-        return this.rooms[this.currentRoomId];
+        return viewport;
     }
 
     createEntity(components = {}, roomId = this.currentRoomId) {
