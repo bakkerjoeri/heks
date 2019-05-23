@@ -8,6 +8,7 @@ import arrayWithout from './utilities/arrayWithout.js';
 
 export default class Hex {
     constructor(modules = {}) {
+        this.isRunning = false;
         this.rooms = {};
         this.currentRoomId = null;
         this.entities = {};
@@ -17,6 +18,37 @@ export default class Hex {
         Object.keys(modules).forEach((moduleName) => {
             this.registerModule(moduleName, modules[moduleName]);
         });
+
+        this.step = this.step.bind(this);
+    }
+
+    start() {
+        if (!this.isRunning) {
+            this.isRunning = true;
+            window.requestAnimationFrame(this.step);
+        }
+    }
+
+    stop() {
+        this.isRunning = false;
+    }
+
+    step() {
+        this.update();
+        this.draw();
+
+        if (this.isRunning) {
+            window.requestAnimationFrame(this.step);
+        }
+    }
+
+    update() {
+        this.emitEvent('update');
+        this.emitEvent('endUpdate');
+    }
+
+    draw() {
+        this.emitEvent('draw');
     }
 
     registerModule(name, Class) {
@@ -27,9 +59,10 @@ export default class Hex {
         this[name] = new Class(this);
     }
 
-    createRoom(id = createUuid(), setAsCurrent = false) {
+    createRoom(id = createUuid(), size, setAsCurrent = false) {
         const newRoom = {
             id,
+            size,
             entities: [],
         };
 
