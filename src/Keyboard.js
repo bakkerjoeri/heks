@@ -47,7 +47,7 @@ export default class Keyboard {
             });
         });
 
-        this.engine.addEventHandler('endUpdate', () => {
+        this.engine.addEventHandler('afterUpdate', () => {
             this.resetPressedKeys();
             this.resetReleasedKeys();
         });

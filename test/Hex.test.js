@@ -113,7 +113,7 @@ describe('Hex', () => {
         test('Creates a component category with the component value for the entity.', () => {
             let entity = hex.createEntity();
             hex.setComponentForEntity('health', 5, entity.id);
-            expect(hex.componentsMap['health'][entity.id]).toEqual(5);
+            expect(hex.state.componentsMap['health'][entity.id]).toEqual(5);
         });
 
         test('Throws an error if entity with given ID doesn\'t exist.', () => {

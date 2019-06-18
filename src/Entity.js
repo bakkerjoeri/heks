@@ -5,8 +5,8 @@ export default function Entity(engine, entityId = createUuid()) {
         engine,
         id: entityId,
         hasComponent(componentName) {
-            return engine.componentsMap.hasOwnProperty(componentName) &&
-                engine.componentsMap[componentName].hasOwnProperty(entityId);
+            return engine.state.componentsMap.hasOwnProperty(componentName) &&
+                engine.state.componentsMap[componentName].hasOwnProperty(entityId);
         },
         get components() {
             return engine.getComponentsForEntity(entityId)
@@ -55,9 +55,9 @@ export default function Entity(engine, entityId = createUuid()) {
             if (target.hasOwnProperty(property)) {
                 return Reflect.defineProperty(target, property, descriptor);
             }
-            
+
             target.engine.setComponentForEntity(property, descriptor.value, target.id);
-            
+
             return true;
         },
         deleteProperty: (target, property) => {

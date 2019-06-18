@@ -7,13 +7,18 @@ import objectWithout from './utilities/objectWithout.js';
 import arrayWithout from './utilities/arrayWithout.js';
 
 export default class Hex {
-    constructor(modules = {}) {
+    constructor(modules = {}, container, size, scale = 1) {
+        this.setupCanvas(container, size, scale);
+
+        this.state = {
+            componentsMap: {},
+            currentRoomId: null,
+            rooms: {},
+            viewports: {},
+        };
+
         this.isRunning = false;
-        this.rooms = {};
-        this.currentRoomId = null;
-        this.viewports = {};
         this.entities = {};
-        this.componentsMap = {};
         this.eventHandlers = {};
 
         Object.keys(modules).forEach((moduleName) => {
@@ -21,6 +26,23 @@ export default class Hex {
         });
 
         this.step = this.step.bind(this);
+    }
+
+    setupCanvas(container, size, scale) {
+        this.size = size;
+        this.scale = scale;
+        this.canvas = document.createElement('canvas');
+        this.context = this.canvas.getContext('2d');
+
+        container.appendChild(this.canvas);
+        this.canvas.setAttribute('width', size.width);
+        this.canvas.setAttribute('height', size.height);
+        this.canvas.style.width = `${size.width * scale}px`;
+        this.canvas.style.height = `${size.height * scale}px`;
+        this.canvas.style.imageRendering = '-moz-crisp-edges';
+        this.canvas.style.imageRendering = '-webkit-crisp-edges';
+        this.canvas.style.imageRendering = 'pixelated';
+        this.canvas.style.backgroundColor = 'black';
     }
 
     start() {
@@ -34,22 +56,25 @@ export default class Hex {
         this.isRunning = false;
     }
 
-    step() {
-        this.update();
-        this.draw();
+    step(timeElapsed) {
+        this.update(timeElapsed);
+        this.draw(timeElapsed);
 
         if (this.isRunning) {
             window.requestAnimationFrame(this.step);
         }
     }
 
-    update() {
-        this.emitEvent('update');
-        this.emitEvent('endUpdate');
+    update(timeElapsed) {
+        this.emitEvent('beforeUpdate', timeElapsed);
+        this.emitEvent('update', timeElapsed);
+        this.emitEvent('afterUpdate', timeElapsed);
     }
 
-    draw() {
-        this.emitEvent('draw');
+    draw(timeElapsed) {
+        this.emitEvent('beforeDraw', timeElapsed);
+        this.emitEvent('draw', timeElapsed);
+        this.emitEvent('afterDraw', timeElapsed);
     }
 
     registerModule(name, Class) {
@@ -66,10 +91,13 @@ export default class Hex {
             size,
             entities: [],
             viewports: [],
+            layers: {
+                default: 0,
+            }
         };
 
-        this.rooms = {
-            ...this.rooms,
+        this.state.rooms = {
+            ...this.state.rooms,
             [id]: newRoom,
         };
 
@@ -79,52 +107,56 @@ export default class Hex {
     }
 
     setCurrentRoom(roomId) {
-        if (!this.rooms.hasOwnProperty(roomId)) {
+        if (!this.state.rooms.hasOwnProperty(roomId)) {
             throw new Error(`Room with id ${roomId} doesn't exist.`);
         }
 
-        this.currentRoomId = roomId;
+        this.state.currentRoomId = roomId;
     }
 
     get currentRoom() {
-        return this.rooms[this.currentRoomId];
+        return this.state.rooms[this.state.currentRoomId];
     }
 
     addViewportToRoom(roomId, viewportId) {
-        if (!this.rooms.hasOwnProperty(roomId)) {
+        if (!this.state.rooms.hasOwnProperty(roomId)) {
             throw new Error(`Can't find room with ID "${roomId}".`);
         }
 
-        this.rooms = {
-            ...this.rooms,
+        this.state.rooms = {
+            ...this.state.rooms,
             [roomId]: {
-                ...this.rooms[roomId],
+                ...this.state.rooms[roomId],
                 viewports: [
-                    ...this.rooms[roomId].viewports,
+                    ...this.state.rooms[roomId].viewports,
                     viewportId,
                 ],
             },
         };
     }
 
+    createLayer(name, depth = 0, roomId = this.state.currentRoomId) {
+        this.state.rooms[roomId].layers[name] = depth;
+    }
+
     addEntityToRoom(roomId, entityId) {
-        if (!this.rooms.hasOwnProperty(roomId)) {
+        if (!this.state.rooms.hasOwnProperty(roomId)) {
             throw new Error(`Can't find room with ID "${roomId}".`);
         }
 
-        this.rooms = {
-            ...this.rooms,
+        this.state.rooms = {
+            ...this.state.rooms,
             [roomId]: {
-                ...this.rooms[roomId],
+                ...this.state.rooms[roomId],
                 entities: [
-                    ...this.rooms[roomId].entities,
+                    ...this.state.rooms[roomId].entities,
                     entityId,
                 ],
             },
         };
     }
 
-    createViewport(properties, roomId = this.currentRoomId) {
+    createViewport(size = this.size, roomId = this.state.currentRoomId) {
         const DEFAULT_PROPERTIES = {
             id: createUuid(),
             position: {
@@ -135,21 +167,16 @@ export default class Hex {
                 x: 0,
                 y: 0,
             },
-            size: {
-                width: 0,
-                height: 0,
-            },
-            isActive: true,
             entityToFollow: '',
         };
 
         const viewport = {
             ...DEFAULT_PROPERTIES,
-            ...properties
+            size,
         };
 
-        this.viewports = {
-            ...this.viewports,
+        this.state.viewports = {
+            ...this.state.viewports,
             [viewport.id]: viewport,
         }
         this.addViewportToRoom(roomId, viewport.id);
@@ -157,7 +184,17 @@ export default class Hex {
         return viewport;
     }
 
-    createEntity(components = {}, roomId = this.currentRoomId) {
+    getViewportsInCurrentRoom() {
+        if (!this.currentRoom) {
+            throw new Error('There is no current room set.');
+        }
+
+        return this.currentRoom.viewports.map((viewportId) => {
+            return this.state.viewports[viewportId];
+        });
+    }
+
+    createEntity(components = {}, roomId = this.state.currentRoomId) {
         const entity = new Entity(this);
 
         this.entities = {
@@ -172,7 +209,7 @@ export default class Hex {
     }
 
     removeEntity(entityId) {
-        this.rooms = Object.entries(this.rooms).reduce((rooms, [roomId, room]) => {
+        this.state.rooms = Object.entries(this.state.rooms).reduce((rooms, [roomId, room]) => {
             return {
                 ...rooms,
                 [roomId]: {
@@ -191,36 +228,44 @@ export default class Hex {
     }
 
     getEntities(entityFilter = {}) {
-        if (!isObject(entityFilter)) {
-            throw new Error(`entityFilter is expected to be an object, received ${typeof entityFilter} instead.`);
-        }
-
         if (!this.currentRoom) {
             return [];
         }
 
+        return this.filterEntities(this.currentRoom.entities, entityFilter);
+    }
+
+    filterEntities(entityIds, entityFilter) {
+        if (!isObject(entityFilter)) {
+            throw new Error(`entityFilter is expected to be an object, received ${typeof entityFilter} instead.`);
+        }
+
         return Object.entries(entityFilter).reduce((entityIds, [componentName, filterValue]) => {
-            if (!this.componentsMap.hasOwnProperty(componentName)) {
+            if (!this.state.componentsMap.hasOwnProperty(componentName)) {
                 return filterValue ? [] : entityIds;
             }
 
             return entityIds.filter((entityId) => {
                 if (
                     typeof filterValue === 'function' &&
-                    this.componentsMap[componentName].hasOwnProperty(entityId)
+                    this.state.componentsMap[componentName].hasOwnProperty(entityId)
                 ) {
-                    return filterValue(this.componentsMap[componentName][entityId]);
+                    return filterValue(
+                        this.state.componentsMap[componentName][entityId],
+                        this.getEntity(entityId),
+                        this
+                    );
                 }
 
                 if (!filterValue) {
-                    return !this.componentsMap[componentName].hasOwnProperty(entityId) ||
-                        !this.componentsMap[componentName][entityId];
+                    return !this.state.componentsMap[componentName].hasOwnProperty(entityId) ||
+                        !this.state.componentsMap[componentName][entityId];
                 }
 
-                return this.componentsMap[componentName].hasOwnProperty(entityId) &&
-                    this.componentsMap[componentName][entityId];
+                return this.state.componentsMap[componentName].hasOwnProperty(entityId) &&
+                    this.state.componentsMap[componentName][entityId];
             });
-        }, this.currentRoom.entities).map((entityId) => {
+        }, entityIds).map((entityId) => {
             return this.getEntity(entityId);
         });
     }
@@ -230,10 +275,10 @@ export default class Hex {
             throw new Error(`No entity with ${entityId} found.`);
         }
 
-        this.componentsMap = {
-            ...this.componentsMap,
+        this.state.componentsMap = {
+            ...this.state.componentsMap,
             [name]: {
-                ...this.componentsMap[name] || {},
+                ...this.state.componentsMap[name] || {},
                 [entityId]: value,
             },
         }
@@ -256,26 +301,26 @@ export default class Hex {
     }
 
     removeComponentFromEntity(name, entityId) {
-        if (!this.componentsMap.hasOwnProperty(name)) {
+        if (!this.state.componentsMap.hasOwnProperty(name)) {
             return;
         }
 
-        if (!this.componentsMap[name].hasOwnProperty(entityId)) {
+        if (!this.state.componentsMap[name].hasOwnProperty(entityId)) {
             return;
         }
 
-        this.componentsMap = {
-            ...this.componentsMap,
-            [name]: objectWithout(this.componentsMap[name], entityId.toString()),
+        this.state.componentsMap = {
+            ...this.state.componentsMap,
+            [name]: objectWithout(this.state.componentsMap[name], entityId.toString()),
         }
 
-        if (isEmptyObject(this.componentsMap[name])) {
-            this.componentsMap = objectWithout(this.componentsMap, name);
+        if (isEmptyObject(this.state.componentsMap[name])) {
+            this.state.componentsMap = objectWithout(this.state.componentsMap, name);
         }
     }
 
     removeComponentsFromEntity(entityId) {
-        Object.keys(this.componentsMap).forEach((componentName) => {
+        Object.keys(this.state.componentsMap).forEach((componentName) => {
             this.removeComponentFromEntity(componentName, entityId);
         });
     }
@@ -286,13 +331,13 @@ export default class Hex {
         }
 
         if (
-            !this.componentsMap.hasOwnProperty(name) ||
-            !this.componentsMap[name].hasOwnProperty(entityId)
+            !this.state.componentsMap.hasOwnProperty(name) ||
+            !this.state.componentsMap[name].hasOwnProperty(entityId)
         ) {
             return undefined;
         }
 
-        return this.componentsMap[name][entityId];
+        return this.state.componentsMap[name][entityId];
     }
 
     getComponentsForEntity(entityId) {
@@ -300,11 +345,11 @@ export default class Hex {
             throw new Error(`No entity with ${entityId} found.`);
         }
 
-        return Object.keys(this.componentsMap).reduce((components, componentName) => {
-            if (this.componentsMap[componentName].hasOwnProperty(entityId)) {
+        return Object.keys(this.state.componentsMap).reduce((components, componentName) => {
+            if (this.state.componentsMap[componentName].hasOwnProperty(entityId)) {
                 return {
                     ...components,
-                    [componentName]: this.componentsMap[componentName][entityId],
+                    [componentName]: this.state.componentsMap[componentName][entityId],
                 }
             }
 
