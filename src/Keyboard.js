@@ -43,7 +43,7 @@ export default class Keyboard {
             });
 
             this.releasedKeys.forEach((activeKey) => {
-                engine.emitEvent('keyReleased', activeKey);
+                engine.emitEvent('keyUp', activeKey);
             });
         });
 
