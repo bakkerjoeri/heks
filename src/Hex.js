@@ -156,7 +156,7 @@ export default class Hex {
         };
     }
 
-    createViewport(size = this.size, roomId = this.state.currentRoomId) {
+    createViewport(options = {}, roomId = this.state.currentRoomId) {
         const DEFAULT_PROPERTIES = {
             id: createUuid(),
             position: {
@@ -167,12 +167,13 @@ export default class Hex {
                 x: 0,
                 y: 0,
             },
+            size: this.size,
             entityToFollow: '',
         };
 
         const viewport = {
             ...DEFAULT_PROPERTIES,
-            size,
+            ...options,
         };
 
         this.state.viewports = {
