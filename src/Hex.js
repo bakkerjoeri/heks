@@ -168,7 +168,7 @@ export default class Hex {
                 y: 0,
             },
             size: this.size,
-            entityToFollow: '',
+            entityToFollow: null,
         };
 
         const viewport = {
@@ -185,14 +185,31 @@ export default class Hex {
         return viewport;
     }
 
+    getViewport(viewportId) {
+        if (!this.state.viewports.hasOwnProperty(viewportId)) {
+            throw new Error(`No viewport with ID ${viewportId} found.`);
+
+        }
+        return this.state.viewports[viewportId];
+    }
+
     getViewportsInCurrentRoom() {
         if (!this.currentRoom) {
             throw new Error('There is no current room set.');
         }
 
         return this.currentRoom.viewports.map((viewportId) => {
-            return this.state.viewports[viewportId];
+            return this.getViewport(viewportId)
         });
+    }
+
+    setEntityToFollowForViewport(entityId, viewportId) {
+        if (!this.entities.hasOwnProperty(entityId)) {
+            throw new Error(`No entity with ID ${entityId} found.`);
+        }
+
+        const viewport = this.getViewport(viewportId);
+        viewport.entityToFollow = entityId;
     }
 
     createEntity(components = {}, roomId = this.state.currentRoomId) {
