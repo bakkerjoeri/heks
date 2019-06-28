@@ -2,6 +2,8 @@ import { getImageForFilePath } from './SpriteManager.js';
 
 export default class Renderer {
     constructor(engine) {
+        engine.addEventHandler('beforeDraw', updateViewportPositions);
+
         engine.addEventHandlerForEntities('beforeDraw', updateSpriteFrame, {
             'sprite': true,
         });
@@ -13,6 +15,42 @@ export default class Renderer {
     }
 }
 
+export function updateViewportPositions(engine) {
+    const viewportsToUpdate = engine.getViewportsInCurrentRoom().filter((viewport) => {
+        return viewport.entityToFollow !== null;
+    });
+
+    viewportsToUpdate.forEach((viewport) => {
+        viewport.position = calculateViewportPositionCenteredOnEntity(engine, viewport, engine.currentRoom, engine.getEntity(viewport.entityToFollow));
+    });
+}
+
+export function calculateViewportPositionCenteredOnEntity(engine, viewport, room, entityToFollow) {
+    if (
+        !entityToFollow ||
+        !entityToFollow.position ||
+        !entityToFollow.sprite
+    ) {
+        return viewport.position;
+    }
+
+    const sprite = engine.SpriteManager.sprites[entityToFollow.sprite.id];
+    const spriteFrame = sprite.frames[entityToFollow.sprite.frame];
+    debugger;
+    const horizontalOffset = entityToFollow.position.x - (viewport.size.width / 2) + (spriteFrame.size.width / 2);
+    const verticalOffset = entityToFollow.position.y - (viewport.size.height / 2) + (spriteFrame.size.height / 2);
+    const horizontalLowerBound = 0;
+    const verticalLowerBound = 0;
+    const horizontalUpperBound = room.size.width - viewport.size.width;
+    const verticalUpperBound = room.size.height - viewport.size.height;
+
+    let newViewportPosition = {
+        x: Math.min(Math.max(horizontalOffset, horizontalLowerBound), horizontalUpperBound),
+        y: Math.min(Math.max(verticalOffset, verticalLowerBound), verticalUpperBound),
+    };
+
+    return newViewportPosition;
+}
 
 export function drawEntitySprite(engine, entities) {
     engine.getViewportsInCurrentRoom().forEach((viewport) => {
