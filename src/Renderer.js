@@ -25,6 +25,44 @@ export function updateViewportPositions(engine) {
     });
 }
 
+export function calculateEntityBounds(engine, entity) {
+    if (!entity.position) {
+        throw new Error(`Entity with ID ${entity.id} has no position to calculate bounds for.`);
+    }
+
+    if (!entity.sprite) {
+        return {
+            ...entity.position,
+            width: 0,
+            height: 0,
+        }
+    }
+
+    const sprite = engine.SpriteManager.sprites[entity.sprite.id];
+    const spriteFrame = sprite.frames[entity.sprite.frame];
+
+    return {
+        ...entity.position,
+        ...spriteFrame.size,
+    };
+}
+
+export function isEntityAtPosition(engine, entity, position) {
+    const entityBounds = calculateEntityBounds(engine, entity);
+
+    return position.x >= entityBounds.x &&
+        position.y >= entityBounds.y &&
+        position.x <= entityBounds.x + entityBounds.width &&
+        position.y <= entityBounds.y + entityBounds.height;
+}
+
+export function findEntitiesAtPosition(engine, position) {
+    const entitiesAtPosition = engine.getEntities({ position: true })
+        .filter((entity) => isEntityAtPosition(engine, entity, position));
+
+    return sortByDepth(entitiesAtPosition, engine.currentRoom).reverse();
+}
+
 export function calculateViewportPositionCenteredOnEntity(engine, viewport, room, entityToFollow) {
     if (
         !entityToFollow ||
@@ -34,11 +72,10 @@ export function calculateViewportPositionCenteredOnEntity(engine, viewport, room
         return viewport.position;
     }
 
-    const sprite = engine.SpriteManager.sprites[entityToFollow.sprite.id];
-    const spriteFrame = sprite.frames[entityToFollow.sprite.frame];
-    debugger;
-    const horizontalOffset = entityToFollow.position.x - (viewport.size.width / 2) + (spriteFrame.size.width / 2);
-    const verticalOffset = entityToFollow.position.y - (viewport.size.height / 2) + (spriteFrame.size.height / 2);
+    const entityBounds = calculateEntityBounds(engine, entityToFollow);
+
+    const horizontalOffset = entityBounds.x - (viewport.size.width / 2) + (entityBounds.width / 2);
+    const verticalOffset = entityBounds.y - (viewport.size.height / 2) + (entityBounds.height / 2);
     const horizontalLowerBound = 0;
     const verticalLowerBound = 0;
     const horizontalUpperBound = room.size.width - viewport.size.width;
@@ -96,20 +133,12 @@ export function drawEntitySprite(engine, entities) {
 }
 
 export function isEntityVisibleInViewport(entity, viewport, engine) {
-    const sprite = engine.SpriteManager.sprites[entity.sprite.id];
-    const spriteFrame = sprite.frames[entity.sprite.frame];
+    const entityBounds = calculateEntityBounds(engine, entity);
 
-    let visibleBoundingBox = {
-        x: entity.position.x + sprite.origin.left,
-        y: entity.position.y + sprite.origin.top,
-        width: spriteFrame.size.width,
-        height: spriteFrame.size.height,
-    }
-
-    return visibleBoundingBox.x < viewport.position.x + viewport.size.width
-        && visibleBoundingBox.y < viewport.position.y + viewport.size.height
-        && visibleBoundingBox.x + visibleBoundingBox.width > viewport.position.x
-        && visibleBoundingBox.y + visibleBoundingBox.height > viewport.position.y;
+    return entityBounds.x < viewport.position.x + viewport.size.width
+        && entityBounds.y < viewport.position.y + viewport.size.height
+        && entityBounds.x + entityBounds.width > viewport.position.x
+        && entityBounds.y + entityBounds.height > viewport.position.y;
 }
 
 export function updateSpriteFrame(engine, entity, timeElapsed) {
