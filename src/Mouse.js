@@ -1,4 +1,5 @@
 import arrayWithout from './utilities/arrayWithout.js';
+import { findEntitiesAtPosition } from './Renderer.js';
 
 export const MOUSE_BUTTON_NAMES = {
     0: 'left',
@@ -16,8 +17,13 @@ export default class Mouse {
         this.pressedButtons = [];
         this.activeButtons = [];
         this.releasedButtons = [];
+        this.entitiesUnderMouse = [];
 
         this.resetAllButtons = this.resetAllButtons.bind(this);
+
+        engine.addEventHandler('beforeUpdate', () => {
+            this.entitiesUnderMouse = findEntitiesAtPosition(engine, this.positionInRoom).map(entity => entity.id);
+        });
 
         window.addEventListener('mousemove', (event) => {
             const viewports = engine.getViewportsInCurrentRoom();
@@ -41,6 +47,8 @@ export default class Mouse {
 
             this.positionInViewport = positionInViewport;
             this.positionInRoom = positionInRoom;
+
+            engine.emitEvent('mouseMove', this.positionInRoom, this.positionInViewport, this.entitiesUnderMouse);
         });
 
         window.addEventListener('mousedown', (event) => {
@@ -71,15 +79,15 @@ export default class Mouse {
 
         this.engine.addEventHandler('update', (engine) => {
             this.pressedButtons.forEach((activeButton) => {
-                engine.emitEvent('mouseClick', activeButton);
+                engine.emitEvent('mouseClick', activeButton, this.positionInRoom, this.positionInViewport, this.entitiesUnderMouse);
             });
 
             this.activeButtons.forEach((activeButton) => {
-                engine.emitEvent('mouseDown', activeButton);
+                engine.emitEvent('mouseDown', activeButton, this.positionInRoom, this.positionInViewport, this.entitiesUnderMouse);
             });
 
             this.releasedButtons.forEach((activeButton) => {
-                engine.emitEvent('mouseUp', activeButton);
+                engine.emitEvent('mouseUp', activeButton, this.positionInRoom, this.positionInViewport, this.entitiesUnderMouse);
             });
         });
 
