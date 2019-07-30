@@ -79,15 +79,15 @@ export default class Mouse {
 
         this.engine.addEventHandler('update', (engine) => {
             this.pressedButtons.forEach((activeButton) => {
-                engine.emitEvent('mouseClick', activeButton, this.positionInRoom, this.positionInViewport, this.entitiesUnderMouse);
+                engine.emitEvent('mouseButtonPressed', activeButton, this.positionInRoom, this.positionInViewport, this.entitiesUnderMouse);
             });
 
             this.activeButtons.forEach((activeButton) => {
-                engine.emitEvent('mouseDown', activeButton, this.positionInRoom, this.positionInViewport, this.entitiesUnderMouse);
+                engine.emitEvent('mouseButtonActive', activeButton, this.positionInRoom, this.positionInViewport, this.entitiesUnderMouse);
             });
 
             this.releasedButtons.forEach((activeButton) => {
-                engine.emitEvent('mouseUp', activeButton, this.positionInRoom, this.positionInViewport, this.entitiesUnderMouse);
+                engine.emitEvent('mouseButtonUp', activeButton, this.positionInRoom, this.positionInViewport, this.entitiesUnderMouse);
             });
         });
 

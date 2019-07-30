@@ -39,7 +39,7 @@ export default class Keyboard {
             });
 
             this.activeKeys.forEach((activeKey) => {
-                engine.emitEvent('keyDown', activeKey);
+                engine.emitEvent('keyActive', activeKey);
             });
 
             this.releasedKeys.forEach((activeKey) => {
