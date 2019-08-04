@@ -121,16 +121,16 @@ describe('Hex', () => {
         });
     });
 
-    describe('getComponentForEntity', () => {
+    describe('getValueOfComponentForEntity', () => {
         test('Creates a component category with the component value for the entity.', () => {
             let entity = hex.createEntity({
                 'health': 5,
             });
-            expect(hex.getComponentForEntity('health', entity.id)).toEqual(5);
+            expect(hex.getValueOfComponentForEntity('health', entity.id)).toEqual(5);
         });
 
         test('Throws an error if entity with given ID doesn\'t exist.', () => {
-            expect(() => { hex.getComponentForEntity('health', 'abc') }).toThrow();
+            expect(() => { hex.getValueOfComponentForEntity('health', 'abc') }).toThrow();
         });
     });
 });
