@@ -1,11 +1,12 @@
 import { Entity, WithComponents, createEntityProxy } from './Entity.js';
+import { Components, Component, ComponentPrimitive } from './Component.js';
 import Module from './Module.js';
 import createUuid from './utilities/createUuid.js';
 import isEmptyObject from './utilities/isEmptyObject.js';
 import objectWithout from './utilities/objectWithout.js';
 import arrayWithout from './utilities/arrayWithout.js';
 
-interface GameState {
+export interface GameState {
     componentsMap: ComponentsEntityMap;
     currentRoomId: Room['id'] | null;
     rooms: {
@@ -34,31 +35,18 @@ export interface Viewport {
     entityToFollow: Entity['id'] | null;
 }
 
-export interface Components {
-    [componentName: string]: Component;
-}
-
 interface ComponentsEntityMap {
     [componentName: string]: {
         [entityId in Entity['id']]: Component;
     };
 }
 
-export type Component = Primitive | ComponentObject;
-
-export interface ComponentObject {
-    [key: string]: Component;
-}
-
-
-type Primitive = string | number | boolean | null | symbol;
-
 interface CSSStyleDeclarationWithImageRendering extends CSSStyleDeclaration {
     imageRendering: string | null;
 }
 
 interface ComponentFilter {
-    [componentName: string]: boolean | Primitive | ((
+    [componentName: string]: boolean | ComponentPrimitive | ((
         value: Component,
         entity: Entity,
         engine: Hex

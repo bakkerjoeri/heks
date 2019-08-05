@@ -1,4 +1,5 @@
-import Hex, { Components } from './Hex.js';
+import Hex from './Hex.js';
+import { Components } from './Component.js';
 import createUuid from './utilities/createUuid.js';
 
 export interface Entity {
