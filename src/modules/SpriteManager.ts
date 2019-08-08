@@ -1,5 +1,6 @@
 import Module from './../Module.js';
-import Hex, { ComponentObject, Offset, Size } from './../Hex.js';
+import Hex, { Offset, Size, WithModules } from './../Hex.js';
+import { ComponentObject } from './../Component.js';
 
 export const imageCache: {
     [filePath: string]: HTMLImageElement;
@@ -37,10 +38,10 @@ export interface SpriteComponent extends ComponentObject {
 }
 
 export default class SpriteManager implements Module {
-    public engine: Hex & { SpriteManager: SpriteManager };
+    public engine: Hex & WithModules<{ SpriteManager: SpriteManager }>;
     public sprites: { [spriteId in Sprite['id']]: Sprite } = {};
 
-    public constructor(engine: Hex & { SpriteManager: SpriteManager }) {
+    public constructor(engine: Hex & WithModules<{ SpriteManager: SpriteManager }>) {
         this.engine = engine;
     }
 

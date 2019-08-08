@@ -1,13 +1,13 @@
-import Hex, { Boundaries, Room, Viewport, Position, PositionComponent } from './../Hex.js';
+import Hex, { Boundaries, Room, Viewport, Position, PositionComponent, WithModules } from './../Hex.js';
 import SpriteManager from './SpriteManager.js';
 import { Entity } from './../Entity.js';
 import Module from './../Module.js';
 import { SpriteComponent, getImageForFilePath } from './SpriteManager.js';
 
 export default class Renderer implements Module {
-    public engine: Hex & { Renderer: Renderer; SpriteManager: SpriteManager };
+    public engine: Hex & WithModules<{ Renderer: Renderer; SpriteManager: SpriteManager }>;
 
-    public constructor(engine: Hex & { Renderer: Renderer; SpriteManager: SpriteManager }) {
+    public constructor(engine: Hex & WithModules<{ Renderer: Renderer; SpriteManager: SpriteManager }>) {
         this.engine = engine;
 
         engine.addEventHandler('beforeDraw', updateViewportPositions);

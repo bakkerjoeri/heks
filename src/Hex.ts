@@ -1,10 +1,14 @@
 import { Entity, WithComponents, createEntityProxy } from './Entity.js';
-import { Components, Component, ComponentPrimitive } from './Component.js';
+import { Components, Component, ComponentPrimitive, ComponentObject } from './Component.js';
 import Module from './Module.js';
 import createUuid from './utilities/createUuid.js';
 import isEmptyObject from './utilities/isEmptyObject.js';
 import objectWithout from './utilities/objectWithout.js';
 import arrayWithout from './utilities/arrayWithout.js';
+
+export type WithModules<ModulesOfEngine = {}> = {
+    [ModuleName in keyof ModulesOfEngine]: ModulesOfEngine[ModuleName];
+}
 
 export interface GameState {
     componentsMap: ComponentsEntityMap;
@@ -35,17 +39,13 @@ export interface Viewport {
     entityToFollow: Entity['id'] | null;
 }
 
-interface ComponentsEntityMap {
+export interface ComponentsEntityMap {
     [componentName: string]: {
         [entityId in Entity['id']]: Component;
     };
 }
 
-interface CSSStyleDeclarationWithImageRendering extends CSSStyleDeclaration {
-    imageRendering: string | null;
-}
-
-interface ComponentFilter {
+export interface ComponentFilter {
     [componentName: string]: boolean | ComponentPrimitive | ((
         value: Component,
         entity: Entity,
@@ -54,21 +54,23 @@ interface ComponentFilter {
 }
 
 interface Constructable<T> { new (...args: any[]): T }
-type EventHandler = (engine: Hex, ...args: any[]) => void;
-type EventHandlerPerEntity<T> = (engine: Hex, entity: Entity & WithComponents<T>, ...args: any[]) => void;
-type EventHandlerForEntityGroup<T> = (engine: Hex, entities: (Entity & WithComponents<T>)[], ...args: any[]) => void;
+
+export type EventHandler = (engine: Hex, ...args: any[]) => void;
+export type EventHandlerPerEntity<T> = (engine: Hex, entity: Entity & WithComponents<T>, ...args: any[]) => void;
+export type EventHandlerForEntityGroup<T> = (engine: Hex, entities: (Entity & WithComponents<T>)[], ...args: any[]) => void;
 
 export interface Size {
     width: number;
     height: number;
 }
 
-export interface Position {
+export interface Position extends ComponentObject {
     x: number;
     y: number;
 }
 
-export type PositionComponent = Position;
+export type PositionComponent = Position & ComponentObject;
+export type SizeComponent = Size & ComponentObject;
 
 export interface Offset {
     top: number;
@@ -76,6 +78,10 @@ export interface Offset {
 }
 
 export type Boundaries = Size & Position;
+
+interface CSSStyleDeclarationWithImageRendering extends CSSStyleDeclaration {
+    imageRendering: string | null;
+}
 
 export default class Hex {
     public canvas: HTMLCanvasElement;
@@ -344,9 +350,6 @@ export default class Hex {
 
         this.setComponentsForEntity(components, entity.id);
         this.addEntityToRoom(roomId, entity.id);
-
-        console.log(entity.id, entity.components);
-        console.log({ ...this.state.componentsMap.sprite });
 
         return entity;
     }
