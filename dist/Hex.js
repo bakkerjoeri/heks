@@ -6,11 +6,6 @@ import arrayWithout from './utilities/arrayWithout.js';
 export default class Hex {
     constructor(modules = {}, containerElementOrSelector, size, scale) {
         this.isRunning = false;
-        this.scale = 1;
-        this.size = {
-            width: 0,
-            height: 0
-        };
         this.state = {
             componentsMap: {},
             currentRoomId: null,
@@ -40,7 +35,7 @@ export default class Hex {
         }
         this[name] = new ModuleClass(this);
     }
-    setupCanvas(containerElementOrSelector = 'body', size, scale = 1) {
+    setupCanvas(containerElementOrSelector = 'body', size = { width: 0, height: 0 }, scale = 1) {
         this.size = size;
         this.scale = scale;
         this.canvas = document.createElement('canvas');
@@ -84,7 +79,7 @@ export default class Hex {
         this.emitEvent('draw', timeElapsed);
         this.emitEvent('afterDraw', timeElapsed);
     }
-    createRoom(id = createUuid(), size, setAsCurrent = false) {
+    createRoom(id = createUuid(), size = this.size, setAsCurrent = false) {
         const newRoom = {
             id,
             size,
@@ -174,8 +169,6 @@ export default class Hex {
         this.entities = Object.assign({}, this.entities, { [entity.id]: entity });
         this.setComponentsForEntity(components, entity.id);
         this.addEntityToRoom(roomId, entity.id);
-        console.log(entity.id, entity.components);
-        console.log(Object.assign({}, this.state.componentsMap.sprite));
         return entity;
     }
     removeEntity(entityId) {

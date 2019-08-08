@@ -1,10 +1,10 @@
-import Hex from './../src/Hex.js';
+import Hex from './../dist/Hex.js';
 
 let hex;
 
 beforeEach(() => {
     hex = new Hex();
-    hex.createRoom('start', true);
+    hex.createRoom('start', hex.size, true);
 });
 
 describe('Hex', () => {
@@ -98,14 +98,6 @@ describe('Hex', () => {
             expect(Object.keys(hex.getEntities({
                 structure: false,
             })).length).toEqual(2);
-        });
-
-        test('Throws an error when `entityFilter` is not an object.', () => {
-            expect(() => { hex.getEntities('position') }).toThrow();
-            expect(() => { hex.getEntities(() => 'position') }).toThrow();
-            expect(() => { hex.getEntities(12) }).toThrow();
-            expect(() => { hex.getEntities(['position']) }).toThrow();
-            expect(() => { hex.getEntities(null) }).toThrow();
         });
     });
 

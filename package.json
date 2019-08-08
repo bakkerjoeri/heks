@@ -19,6 +19,7 @@
     "eslint": "^5.16.0",
     "eslint-plugin-import": "^2.17.1",
     "jest": "^24.7.1",
+    "jest-canvas-mock": "^2.1.0",
     "typescript": "^3.5.3"
   },
   "dependencies": {}

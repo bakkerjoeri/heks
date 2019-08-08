@@ -87,11 +87,8 @@ export default class Hex {
     public canvas: HTMLCanvasElement;
     public context: CanvasRenderingContext2D;
     public isRunning: boolean = false;
-    public scale: number = 1;
-    public size: Size = {
-        width: 0,
-        height: 0
-    };
+    public scale: number;
+    public size: Size;
     public state: GameState = {
         componentsMap: {},
         currentRoomId: null,
@@ -142,8 +139,8 @@ export default class Hex {
 
     private setupCanvas(
         containerElementOrSelector: Node | string = 'body',
-        size: Size,
-        scale: number = 1
+        size: Size = { width: 0, height: 0 },
+        scale: number = 1,
     ): void {
         this.size = size;
         this.scale = scale;
@@ -200,7 +197,7 @@ export default class Hex {
 
     public createRoom(
         id: Room['id'] = createUuid(),
-        size: Size,
+        size: Size = this.size,
         setAsCurrent: boolean = false
     ): void {
         const newRoom: Room = {
