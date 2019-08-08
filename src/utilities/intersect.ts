@@ -1,5 +1,8 @@
-export default function intersect(shortArray, longArray) {
-    let tempArray;
+export default function intersect(
+    shortArray: any[],
+    longArray: any[]
+): any[] {
+    let tempArray: any[];
 
     if (longArray.length < shortArray.length) {
         tempArray = longArray;
@@ -7,7 +10,7 @@ export default function intersect(shortArray, longArray) {
         shortArray = tempArray;
     }
 
-    return shortArray.filter((value) => {
+    return shortArray.filter((value): boolean => {
         return longArray.includes(value);
     });
 }

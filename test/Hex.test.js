@@ -1,10 +1,10 @@
-import Hex from './../src/Hex.js';
+import Hex from './../dist/Hex.js';
 
 let hex;
 
 beforeEach(() => {
     hex = new Hex();
-    hex.createRoom('start', true);
+    hex.createRoom('start', hex.size, true);
 });
 
 describe('Hex', () => {
@@ -99,14 +99,6 @@ describe('Hex', () => {
                 structure: false,
             })).length).toEqual(2);
         });
-
-        test('Throws an error when `entityFilter` is not an object.', () => {
-            expect(() => { hex.getEntities('position') }).toThrow();
-            expect(() => { hex.getEntities(() => 'position') }).toThrow();
-            expect(() => { hex.getEntities(12) }).toThrow();
-            expect(() => { hex.getEntities(['position']) }).toThrow();
-            expect(() => { hex.getEntities(null) }).toThrow();
-        });
     });
 
     describe('setComponentForEntity', () => {
@@ -121,16 +113,16 @@ describe('Hex', () => {
         });
     });
 
-    describe('getComponentForEntity', () => {
+    describe('getValueOfComponentForEntity', () => {
         test('Creates a component category with the component value for the entity.', () => {
             let entity = hex.createEntity({
                 'health': 5,
             });
-            expect(hex.getComponentForEntity('health', entity.id)).toEqual(5);
+            expect(hex.getValueOfComponentForEntity('health', entity.id)).toEqual(5);
         });
 
         test('Throws an error if entity with given ID doesn\'t exist.', () => {
-            expect(() => { hex.getComponentForEntity('health', 'abc') }).toThrow();
+            expect(() => { hex.getValueOfComponentForEntity('health', 'abc') }).toThrow();
         });
     });
 });

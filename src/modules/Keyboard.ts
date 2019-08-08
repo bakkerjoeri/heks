@@ -1,13 +1,19 @@
-import arrayWithout from './utilities/arrayWithout.js';
+import Hex, { WithModules } from './../Hex.js';
+import Module from './../Module.js';
+import arrayWithout from './../utilities/arrayWithout.js';
 
-export default class Keyboard {
-    constructor(engine) {
+export type Key = string;
+
+export default class Keyboard implements Module {
+    public engine: Hex & WithModules<{ Keyboard: Keyboard }>;
+    public pressedKeys: Key[] = [];
+    public activeKeys: Key[] = [];
+    public releasedKeys: Key[] = [];
+
+    public constructor(engine: Hex & WithModules<{ Keyboard: Keyboard }>) {
         this.engine = engine;
-        this.pressedKeys = [];
-        this.activeKeys = [];
-        this.releasedKeys = [];
 
-        window.addEventListener('keydown', (event) => {
+        window.addEventListener('keydown', (event: KeyboardEvent): void => {
             const key = event.key.toLowerCase();
 
             if (!this.isKeyPressed(key) && !this.isKeyDown(key)) {
@@ -19,7 +25,7 @@ export default class Keyboard {
             }
         });
 
-        window.addEventListener('keyup', (event) => {
+        window.addEventListener('keyup', (event: KeyboardEvent): void => {
             const key = event.key.toLowerCase();
 
             if (this.isKeyDown(key)) {
@@ -33,51 +39,51 @@ export default class Keyboard {
 
         window.addEventListener('blur', this.resetAllKeys.bind(this));
 
-        this.engine.addEventHandler('update', (engine) => {
-            this.pressedKeys.forEach((activeKey) => {
+        this.engine.addEventHandler('update', (engine): void => {
+            this.pressedKeys.forEach((activeKey): void => {
                 engine.emitEvent('keyPressed', activeKey);
             });
 
-            this.activeKeys.forEach((activeKey) => {
+            this.activeKeys.forEach((activeKey): void => {
                 engine.emitEvent('keyActive', activeKey);
             });
 
-            this.releasedKeys.forEach((activeKey) => {
+            this.releasedKeys.forEach((activeKey): void => {
                 engine.emitEvent('keyUp', activeKey);
             });
         });
 
-        this.engine.addEventHandler('afterUpdate', () => {
+        this.engine.addEventHandler('afterUpdate', (): void => {
             this.resetPressedKeys();
             this.resetReleasedKeys();
         });
     }
 
-    isKeyPressed(key) {
+    public isKeyPressed(key: Key): boolean {
         return this.pressedKeys.includes(key);
     }
 
-    isKeyDown(key) {
+    public isKeyDown(key: Key): boolean {
         return this.activeKeys.includes(key);
     }
 
-    isKeyReleased(key) {
+    public isKeyReleased(key: Key): boolean {
         return this.releasedKeys.includes(key);
     }
 
-    resetPressedKeys() {
+    public resetPressedKeys(): void {
         this.pressedKeys = [];
     }
 
-    resetActiveKeys() {
+    public resetActiveKeys(): void {
         this.activeKeys = [];
     }
 
-    resetReleasedKeys() {
+    public resetReleasedKeys(): void {
         this.releasedKeys = [];
     }
 
-    resetAllKeys() {
+    public resetAllKeys(): void {
         this.resetPressedKeys();
         this.resetActiveKeys();
         this.resetReleasedKeys();
