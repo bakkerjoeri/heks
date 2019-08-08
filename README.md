@@ -4,5 +4,5 @@ An JavaScript game engine leveraging events and entities composed of components.
 
 ## Installation
 ```bash
-npm install hex-engine
+npm install @hex/engine
 ```

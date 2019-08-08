@@ -1,5 +1,5 @@
 {
-  "name": "hex-engine",
+  "name": "@hex/engine",
   "version": "1.0.0",
   "description": "A JavaScript game engine leveraging events and entities composed of components. ",
   "repository": "git://github.com/joeribakker/hex.git",
