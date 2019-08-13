@@ -8,4 +8,4 @@ export interface ComponentObject {
     [key: string]: Component;
 }
 
-export type ComponentPrimitive = string | number | boolean | null | symbol;
+export type ComponentPrimitive = string | number | boolean | null | undefined | symbol;

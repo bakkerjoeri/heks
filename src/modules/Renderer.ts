@@ -1,6 +1,6 @@
 import Hex, { Boundaries, Room, Viewport, Position, PositionComponent, WithModules } from './../Hex.js';
 import SpriteManager from './SpriteManager.js';
-import { Entity } from './../Entity.js';
+import { Entity, WithComponents } from './../Entity.js';
 import Module from './../Module.js';
 import { SpriteComponent, getImageForFilePath } from './SpriteManager.js';
 
@@ -60,8 +60,8 @@ export function updateSpriteFrame(
 
 
 export function drawEntitySprite(
-    engine: Hex & { SpriteManager: SpriteManager },
-    entities: (Entity & { position: PositionComponent; sprite: SpriteComponent })[]
+    engine: Hex & WithModules<{ SpriteManager: SpriteManager }>,
+    entities: (Entity & WithComponents<{ position: PositionComponent; sprite: SpriteComponent }>)[]
 ): void {
     engine.getViewportsInCurrentRoom().forEach((viewport): void => {
         engine.context.clearRect(
@@ -89,14 +89,14 @@ export function drawEntitySprite(
                     return isEntityVisibleInViewport(
                         entity,
                         viewport,
-                        engine as Hex & { SpriteManager: SpriteManager }
+                        engine as Hex & WithModules<{ SpriteManager: SpriteManager }>
                     );
                 }
             }
         );
 
         sortByDepth(visibleEntities, engine.currentRoom).forEach((entity): void => {
-            const sprite = engine.SpriteManager.sprites[entity.sprite.id];
+            const sprite = engine.modules.SpriteManager.sprites[entity.sprite.id];
             const spriteFrame = sprite.frames[entity.sprite.frame];
 
             const drawPosition = {
@@ -116,8 +116,8 @@ export function drawEntitySprite(
 }
 
 export function calculateEntityBounds(
-    engine: Hex & { SpriteManager: SpriteManager },
-    entity: Entity & { position?: PositionComponent; sprite?: SpriteComponent }
+    engine: Hex & WithModules<{ SpriteManager: SpriteManager }>,
+    entity: Entity & WithComponents<{ position?: PositionComponent; sprite?: SpriteComponent }>
 ): Boundaries {
     if (!entity.position) {
         throw new Error(`Entity with ID ${entity.id} has no position to calculate bounds for.`);
@@ -131,7 +131,7 @@ export function calculateEntityBounds(
         }
     }
 
-    const sprite = engine.SpriteManager.sprites[entity.sprite.id];
+    const sprite = engine.modules.SpriteManager.sprites[entity.sprite.id];
     const spriteFrame = sprite.frames[entity.sprite.frame];
 
     return {
@@ -141,10 +141,10 @@ export function calculateEntityBounds(
 }
 
 export function calculateViewportPositionCenteredOnEntity(
-    engine: Hex & { SpriteManager: SpriteManager },
+    engine: Hex & WithModules<{ SpriteManager: SpriteManager }>,
     viewport: Viewport,
     room: Room,
-    entityToFollow: Entity & { position: PositionComponent; sprite: SpriteComponent }
+    entityToFollow?: Entity & WithComponents<{ position: PositionComponent; sprite: SpriteComponent }>
 ): Position {
     if (
         !entityToFollow ||
@@ -171,10 +171,10 @@ export function calculateViewportPositionCenteredOnEntity(
     return newViewportPosition;
 }
 
-export function updateViewportPositions(engine: Hex & { SpriteManager: SpriteManager }): void {
+export function updateViewportPositions(engine: Hex & WithModules<{ SpriteManager: SpriteManager }>): void {
     const viewportsToUpdate = engine.getViewportsInCurrentRoom().filter((viewport): boolean => {
         return viewport.entityToFollow !== null;
-    });
+    }) as (Viewport & { entityToFollow: Entity })[];
 
     viewportsToUpdate.forEach((viewport): void => {
         viewport.position = calculateViewportPositionCenteredOnEntity(
@@ -187,7 +187,7 @@ export function updateViewportPositions(engine: Hex & { SpriteManager: SpriteMan
 }
 
 export function isEntityAtPosition(
-    engine: Hex & { SpriteManager: SpriteManager },
+    engine: Hex & WithModules<{ SpriteManager: SpriteManager }>,
     entity: Entity,
     position: Position
 ): boolean {
@@ -222,7 +222,7 @@ function sortByDepth<T extends Entity & { layer?: string; depth?: number }>(
 }
 
 export function findEntitiesAtPosition(
-    engine: Hex & { SpriteManager: SpriteManager },
+    engine: Hex & WithModules<{ SpriteManager: SpriteManager }>,
     position: Position
 ): (Entity & { position: Position })[] {
     const entitiesWithPosition = engine.getEntities<{ position: Position }>({ position: true });
@@ -233,9 +233,9 @@ export function findEntitiesAtPosition(
 }
 
 export function isEntityVisibleInViewport(
-    entity: Entity & { position?: PositionComponent; sprite?: SpriteComponent },
+    entity: Entity & WithComponents<{ position?: PositionComponent; sprite?: SpriteComponent }>,
     viewport: Viewport,
-    engine: Hex & { SpriteManager: SpriteManager },
+    engine: Hex & WithModules<{ SpriteManager: SpriteManager }>,
 ): boolean {
     const entityBounds = calculateEntityBounds(engine, entity);
 
@@ -248,7 +248,7 @@ export function isEntityVisibleInViewport(
 export function calculateFrameIndexFromTimeDifference(
     amountOfFrames: SpriteComponent['frame'],
     framesPerSecond: SpriteComponent['framesPerSecond'],
-    timeOfAnimationStart: SpriteComponent['animationStart'],
+    timeOfAnimationStart: SpriteComponent['animationStart'] = 0,
     currentTime: number,
     isLooping: boolean = true
 ): number {

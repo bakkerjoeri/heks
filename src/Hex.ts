@@ -3,11 +3,16 @@ import { Components, Component, ComponentPrimitive, ComponentObject } from './Co
 import Module from './Module.js';
 import createUuid from './utilities/createUuid.js';
 import isEmptyObject from './utilities/isEmptyObject.js';
+import findElementOrSelector from './utilities/findElementOrSelector.js';
 import objectWithout from './utilities/objectWithout.js';
 import arrayWithout from './utilities/arrayWithout.js';
 
-export type WithModules<ModulesOfEngine = {}> = {
-    [ModuleName in keyof ModulesOfEngine]: ModulesOfEngine[ModuleName];
+export interface WithModules<T extends Modules> {
+    modules: T;
+}
+
+export interface Modules {
+    [moduleName: string]: Module;
 }
 
 export interface GameState {
@@ -56,8 +61,10 @@ export interface ComponentFilter {
 interface Constructable<T> { new (...args: any[]): T }
 
 export type EventHandler = (engine: Hex, ...args: any[]) => void;
-export type EventHandlerPerEntity<T> = (engine: Hex, entity: Entity & WithComponents<T>, ...args: any[]) => void;
-export type EventHandlerForEntityGroup<T> = (engine: Hex, entities: (Entity & WithComponents<T>)[], ...args: any[]) => void;
+
+export type EventHandlerPerEntity<T extends Components> = (engine: Hex, entity: Entity & WithComponents<T>, ...args: any[]) => void;
+
+export type EventHandlerForEntityGroup<T extends Components> = (engine: Hex, entities: (Entity & WithComponents<T>)[], ...args: any[]) => void;
 
 export interface Size {
     width: number;
@@ -80,7 +87,7 @@ export interface Offset {
 export type Boundaries = Size & Position;
 
 interface CSSStyleDeclarationWithImageRendering extends CSSStyleDeclaration {
-    imageRendering: string | null;
+    imageRendering: string;
 }
 
 export default class Hex {
@@ -95,6 +102,7 @@ export default class Hex {
         rooms: {},
         viewports: {},
     };
+    public modules: Modules = {};
 
     private entities: {
         [entityId in Entity['id']]: Entity;
@@ -105,11 +113,21 @@ export default class Hex {
 
     public constructor(
         modules: { [moduleName: string]: Constructable<Module> } = {},
-        containerElementOrSelector: Node | string,
-        size: Size,
-        scale: number
+        containerElementOrSelector: Element | string,
+        size: Size = { width: 0, height: 0 },
+        scale: number = 1
     ) {
-        this.setupCanvas(containerElementOrSelector, size, scale);
+        this.size = size;
+        this.scale = scale;
+        this.canvas = document.createElement('canvas');
+        const context = this.canvas.getContext('2d');
+
+        if (!context) {
+            throw new Error('Could not create context 2D on canvas.');
+        }
+
+        this.context = context;
+        this.setupCanvas(this.canvas, containerElementOrSelector);
 
         Object.keys(modules).forEach((moduleName): void => {
             this.registerModule(moduleName, modules[moduleName]);
@@ -134,44 +152,31 @@ export default class Hex {
             throw new Error(`Cannot register a module under name ${name} because that's already a property of Hex.`);
         }
 
-        this[name] = new ModuleClass(this);
+        this.modules[name] = new ModuleClass(this);
     }
 
     private setupCanvas(
-        containerElementOrSelector: Node | string = 'body',
-        size: Size = { width: 0, height: 0 },
-        scale: number = 1,
+        canvas: HTMLCanvasElement,
+        containerElementOrSelector: Element | string = 'body',
     ): void {
-        this.size = size;
-        this.scale = scale;
-        this.canvas = document.createElement('canvas');
-        this.context = this.canvas.getContext('2d');
+        canvas.setAttribute('width', this.size.width.toString());
+        canvas.setAttribute('height', this.size.height.toString());
 
-        this.canvas.setAttribute('width', size.width.toString());
-        this.canvas.setAttribute('height', size.height.toString());
-
-        const canvasStyle = this.canvas.style as CSSStyleDeclarationWithImageRendering;
-        canvasStyle.width = `${size.width * scale}px`;
-        canvasStyle.height = `${size.height * scale}px`;
+        const canvasStyle = canvas.style as CSSStyleDeclarationWithImageRendering;
+        canvasStyle.width = `${this.size.width * this.scale}px`;
+        canvasStyle.height = `${this.size.height * this.scale}px`;
         canvasStyle.imageRendering = '-moz-crisp-edges';
         canvasStyle.imageRendering = '-webkit-crisp-edges';
         canvasStyle.imageRendering = 'pixelated';
         canvasStyle.backgroundColor = 'black';
 
-        let container: Node;
+        let container = findElementOrSelector(containerElementOrSelector);
 
-        if (typeof containerElementOrSelector === 'string') {
-            let containerSelector = containerElementOrSelector;
-            container = document.querySelector(containerSelector);
-
-            if (!container) {
-                throw new Error(`Could not add canvas to container. No element found for selector ${containerSelector}.`);
-            }
-        } else {
-            container = containerElementOrSelector;
+        if (!container) {
+            throw new Error(`Unable to find container for canvas ${container}.`);
         }
 
-        container.appendChild(this.canvas);
+        container.appendChild(canvas);
     }
 
     private step(timeElapsed: number): void {
@@ -229,13 +234,17 @@ export default class Hex {
     }
 
     public get currentRoom(): Room {
+        if (!this.state.currentRoomId) {
+            throw new Error('There is no current room. Please set one before expecting it.');
+        }
+
         return this.state.rooms[this.state.currentRoomId];
     }
 
     public createLayer(
         name: string,
         depth: number = 0,
-        roomId: Room['id'] = this.state.currentRoomId
+        roomId: Room['id'] = this.state.currentRoomId as string
     ): void {
         this.state.rooms[roomId].layers[name] = depth;
     }
@@ -276,7 +285,7 @@ export default class Hex {
 
     public createViewport(
         viewportOptions: Partial<Viewport> = {},
-        roomId: Room['id'] = this.state.currentRoomId
+        roomId: Room['id'] = this.state.currentRoomId as string
     ): Viewport {
         const DEFAULT_PROPERTIES: Viewport = {
             id: createUuid(),
@@ -336,7 +345,7 @@ export default class Hex {
 
     public createEntity(
         components: Components = {},
-        roomId: Room['id'] = this.state.currentRoomId
+        roomId: Room['id'] = this.state.currentRoomId as string
     ): Entity {
         const entity = createEntityProxy(this);
 
@@ -507,7 +516,7 @@ export default class Hex {
         };
     }
 
-    public addEventHandlerForEntities<T>(
+    public addEventHandlerForEntities<T extends Components>(
         eventName: string,
         handler: EventHandlerPerEntity<T>,
         entityFilter: ComponentFilter = {}
@@ -519,7 +528,7 @@ export default class Hex {
         });
     }
 
-    public addEventHandlerForEntityGroup<T>(
+    public addEventHandlerForEntityGroup<T extends Components>(
         eventName: string,
         handler: EventHandlerForEntityGroup<T>,
         entityFilter: ComponentFilter = {}
