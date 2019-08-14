@@ -1,4 +1,4 @@
-import Hex, { Position, WithModules } from './../Hex.js';
+import Hex, { Position } from './../Hex.js';
 import { Entity } from './../Entity.js';
 import SpriteManager from './SpriteManager.js';
 import Module from './../Module.js';
@@ -15,7 +15,7 @@ const MouseButtonMap: { [eventValue: number]: MouseButton } = {
 };
 
 export default class Mouse implements Module {
-    public engine: Hex & WithModules<{ Mouse: Mouse; SpriteManager: SpriteManager}>;
+    public engine: Hex<{ Mouse: Mouse; SpriteManager: SpriteManager}>;
     public positionInRoom: Position = {x: 0, y: 0};
     public positionInViewport: Position = {x: 0, y: 0};
     public pressedButtons: (MouseButton)[] = [];
@@ -23,7 +23,7 @@ export default class Mouse implements Module {
     public releasedButtons: (MouseButton)[] = [];
     public entitiesUnderMouse: Entity['id'][] = [];
 
-    public constructor(engine: Hex & WithModules<{ Mouse: Mouse; SpriteManager: SpriteManager }>) {
+    public constructor(engine: Hex<{ Mouse: Mouse; SpriteManager: SpriteManager }>) {
         this.engine = engine;
 
         this.resetAllButtons = this.resetAllButtons.bind(this);

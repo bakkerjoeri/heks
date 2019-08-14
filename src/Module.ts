@@ -1,9 +1,17 @@
-import Hex from './Hex.js';
+import Hex, { Constructable } from './Hex.js';
 
-export default class Module {
-    public engine: Hex;
+export interface Modules {
+    [moduleName: string]: Module;
+}
 
-    public constructor(engine: Hex) {
+export type ConstructableModules<TModules extends Modules> = {
+    [ModuleName in keyof TModules]: Constructable<TModules[ModuleName]>
+}
+
+export default class Module<TModulesOfEngine extends Modules = {}> {
+    public engine: Hex<TModulesOfEngine>;
+
+    public constructor(engine: Hex<TModulesOfEngine>) {
         this.engine = engine;
     }
 }

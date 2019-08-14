@@ -2,15 +2,13 @@ import Hex from './Hex.js';
 import { Components } from './Component.js';
 import createUuid from './utilities/createUuid.js';
 
-export interface Entity {
+export type Entity<TComponents extends Components = {}> = {
     id: string;
     engine: Hex;
     hasComponent: (componentName: string) => boolean;
-    components: Components;
-}
-
-export type WithComponents<ComponentsOfEntity = {}> = {
-    [Property in keyof ComponentsOfEntity]: ComponentsOfEntity[Property];
+    components: TComponents;
+} & {
+    [Property in keyof TComponents]: TComponents[Property];
 }
 
 export function createEntityProxy(
