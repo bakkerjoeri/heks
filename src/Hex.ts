@@ -50,15 +50,32 @@ export interface ComponentFilter {
     ) => boolean);
 }
 
-export interface Constructable<T> {
-    new (...args: any[]): T;
+export interface Constructable<TClass> {
+    new (...args: any[]): TClass;
 }
 
-export type EventHandler = (engine: Hex, ...args: any[]) => void;
+export type EventHandler<TModulesOfEngine extends Modules<TModulesOfEngine> = {}> = (
+    engine: Hex<TModulesOfEngine>,
+    ...args: any[]
+) => void;
 
-export type EventHandlerPerEntity<TComponents extends Components> = (engine: Hex, entity: Entity<TComponents>, ...args: any[]) => void;
+export type EventHandlerPerEntity<
+    TModulesOfEngine extends Modules<TModulesOfEngine> = {},
+    TComponents extends Components = {}
+> = (
+    engine: Hex<TModulesOfEngine>,
+    entity: Entity<TComponents>,
+    ...args: any[]
+) => void;
 
-export type EventHandlerForEntityGroup<TComponents extends Components> = (engine: Hex, entities: (Entity<TComponents>)[], ...args: any[]) => void;
+export type EventHandlerForEntityGroup<
+    TModulesOfEngine extends Modules<TModulesOfEngine> = {},
+    TComponents extends Components = {}
+> = (
+    engine: Hex<TModulesOfEngine>,
+    entities: (Entity<TComponents>)[],
+    ...args: any[]
+) => void;
 
 export interface Size {
     width: number;
@@ -84,7 +101,7 @@ interface CSSStyleDeclarationWithImageRendering extends CSSStyleDeclaration {
     imageRendering: string;
 }
 
-export default class Hex<TModules extends Modules = {}> {
+export default class Hex<TModules extends Modules<TModules> = {}> {
     public canvas: HTMLCanvasElement;
     public context: CanvasRenderingContext2D;
     public isRunning: boolean = false;
@@ -102,7 +119,7 @@ export default class Hex<TModules extends Modules = {}> {
         [entityId in Entity['id']]: Entity;
     } = {};
     private eventHandlers: {
-        [eventName: string]: EventHandler[];
+        [eventName: string]: EventHandler<TModules>[];
     } = {}
 
     public constructor(
@@ -498,7 +515,7 @@ export default class Hex<TModules extends Modules = {}> {
             }, {});
     }
 
-    public addEventHandler(eventName: string, handler: EventHandler): void {
+    public addEventHandler(eventName: string, handler: EventHandler<TModules>): void {
         this.eventHandlers = {
             ...this.eventHandlers,
             [eventName]: [
@@ -508,25 +525,25 @@ export default class Hex<TModules extends Modules = {}> {
         };
     }
 
-    public addEventHandlerForEntities<T extends Components>(
+    public addEventHandlerForEntities<TComponents extends Components>(
         eventName: string,
-        handler: EventHandlerPerEntity<T>,
+        handler: EventHandlerPerEntity<TModules, TComponents>,
         entityFilter: ComponentFilter = {}
     ): void {
         this.addEventHandler(eventName, (engine, ...args): void => {
-            this.getEntities<T>(entityFilter).forEach((entity): void => {
+            this.getEntities<TComponents>(entityFilter).forEach((entity): void => {
                 handler(engine, entity, ...args);
             });
         });
     }
 
-    public addEventHandlerForEntityGroup<T extends Components>(
+    public addEventHandlerForEntityGroup<TComponents extends Components>(
         eventName: string,
-        handler: EventHandlerForEntityGroup<T>,
+        handler: EventHandlerForEntityGroup<TModules, TComponents>,
         entityFilter: ComponentFilter = {}
     ): void {
         this.addEventHandler(eventName, (engine, ...args): void => {
-            handler(engine, this.getEntities<T>(entityFilter), ...args);
+            handler(engine, this.getEntities<TComponents>(entityFilter), ...args);
         });
     }
 
