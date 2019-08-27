@@ -1,3 +1,5 @@
 module.exports = {
-    setupFiles: ['jest-canvas-mock'],
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  setupFiles: ['jest-canvas-mock'],
 };

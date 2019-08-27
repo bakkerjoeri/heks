@@ -1,9 +1,8 @@
-import Hex, { Position, WithModules } from './../Hex.js';
-import { Entity } from './../Entity.js';
-import SpriteManager from './SpriteManager.js';
+import Hex, { Position } from './../Hex.js';
+import Entity from './../Entity.js';
 import Module from './../Module.js';
 import arrayWithout from './../utilities/arrayWithout.js';
-import { findEntitiesAtPosition } from './Renderer.js';
+import { findEntitiesAtPosition } from './Graphics2D.js';
 
 type MouseButton = 'left' | 'middle' | 'right' | 'back' | 'forward';
 const MouseButtonMap: { [eventValue: number]: MouseButton } = {
@@ -15,7 +14,7 @@ const MouseButtonMap: { [eventValue: number]: MouseButton } = {
 };
 
 export default class Mouse implements Module {
-    public engine: Hex & WithModules<{ Mouse: Mouse; SpriteManager: SpriteManager}>;
+    public engine: Hex;
     public positionInRoom: Position = {x: 0, y: 0};
     public positionInViewport: Position = {x: 0, y: 0};
     public pressedButtons: (MouseButton)[] = [];
@@ -23,7 +22,7 @@ export default class Mouse implements Module {
     public releasedButtons: (MouseButton)[] = [];
     public entitiesUnderMouse: Entity['id'][] = [];
 
-    public constructor(engine: Hex & WithModules<{ Mouse: Mouse; SpriteManager: SpriteManager }>) {
+    public constructor(engine: Hex) {
         this.engine = engine;
 
         this.resetAllButtons = this.resetAllButtons.bind(this);
@@ -31,7 +30,7 @@ export default class Mouse implements Module {
         engine.addEventHandler('beforeUpdate', (): void => {
             this.entitiesUnderMouse = findEntitiesAtPosition(engine, this.positionInRoom)
                 .map((entity): Entity['id'] => entity.id);
-        })
+        });
 
         window.addEventListener('mousemove', (event): void => {
             const viewports = engine.getViewportsInCurrentRoom();

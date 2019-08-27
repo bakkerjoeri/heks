@@ -1,19 +1,13 @@
-import { Entity, WithComponents, createEntityProxy } from './Entity.js';
+import Entity from './Entity.js';
 import { Components, Component, ComponentPrimitive, ComponentObject } from './Component.js';
-import Module from './Module.js';
+import Graphics2D from './modules/Graphics2D.js';
+import Keyboard from './modules/Keyboard.js';
+import Mouse from './modules/Mouse.js';
 import createUuid from './utilities/createUuid.js';
 import isEmptyObject from './utilities/isEmptyObject.js';
 import findElementOrSelector from './utilities/findElementOrSelector.js';
 import objectWithout from './utilities/objectWithout.js';
 import arrayWithout from './utilities/arrayWithout.js';
-
-export interface WithModules<T extends Modules> {
-    modules: T;
-}
-
-export interface Modules {
-    [moduleName: string]: Module;
-}
 
 export interface GameState {
     componentsMap: ComponentsEntityMap;
@@ -58,13 +52,30 @@ export interface ComponentFilter {
     ) => boolean);
 }
 
-interface Constructable<T> { new (...args: any[]): T }
+export interface Constructable<TClass> {
+    new (...args: any[]): TClass;
+}
 
-export type EventHandler = (engine: Hex, ...args: any[]) => void;
+export type EventHandler = (
+    engine: Hex,
+    ...args: any[]
+) => void;
 
-export type EventHandlerPerEntity<T extends Components> = (engine: Hex, entity: Entity & WithComponents<T>, ...args: any[]) => void;
+export type EventHandlerPerEntity<
+    TComponents extends Components = {}
+> = (
+    engine: Hex,
+    entity: Entity<TComponents>,
+    ...args: any[]
+) => void;
 
-export type EventHandlerForEntityGroup<T extends Components> = (engine: Hex, entities: (Entity & WithComponents<T>)[], ...args: any[]) => void;
+export type EventHandlerForEntityGroup<
+    TComponents extends Components = {}
+> = (
+    engine: Hex,
+    entities: (Entity<TComponents>)[],
+    ...args: any[]
+) => void;
 
 export interface Size {
     width: number;
@@ -102,7 +113,11 @@ export default class Hex {
         rooms: {},
         viewports: {},
     };
-    public modules: Modules = {};
+    public modules: {
+        Graphics2D: Graphics2D;
+        Keyboard: Keyboard;
+        Mouse: Mouse;
+    };
 
     private entities: {
         [entityId in Entity['id']]: Entity;
@@ -112,11 +127,16 @@ export default class Hex {
     } = {}
 
     public constructor(
-        modules: { [moduleName: string]: Constructable<Module> } = {},
-        containerElementOrSelector: Element | string,
+        containerElementOrSelector: Element | string = 'body',
         size: Size = { width: 0, height: 0 },
         scale: number = 1
     ) {
+        this.modules = {
+            Graphics2D: new Graphics2D(this),
+            Keyboard: new Keyboard(this),
+            Mouse: new Mouse(this),
+        };
+
         this.size = size;
         this.scale = scale;
         this.canvas = document.createElement('canvas');
@@ -128,11 +148,6 @@ export default class Hex {
 
         this.context = context;
         this.setupCanvas(this.canvas, containerElementOrSelector);
-
-        Object.keys(modules).forEach((moduleName): void => {
-            this.registerModule(moduleName, modules[moduleName]);
-        });
-
         this.step = this.step.bind(this);
     }
 
@@ -145,14 +160,6 @@ export default class Hex {
 
     public stop(): void {
         this.isRunning = false;
-    }
-
-    public registerModule(name: string, ModuleClass: Constructable<Module>): void {
-        if (this.hasOwnProperty(name)) {
-            throw new Error(`Cannot register a module under name ${name} because that's already a property of Hex.`);
-        }
-
-        this.modules[name] = new ModuleClass(this);
     }
 
     private setupCanvas(
@@ -347,7 +354,7 @@ export default class Hex {
         components: Components = {},
         roomId: Room['id'] = this.state.currentRoomId as string
     ): Entity {
-        const entity = createEntityProxy(this);
+        const entity = new Entity(this);
 
         this.entities = {
             ...this.entities,
@@ -375,22 +382,24 @@ export default class Hex {
         this.entities = objectWithout(this.entities, entityId);
     }
 
-    public getEntity<T = {}>(entityId: Entity['id']): (Entity & WithComponents<T>) {
-        return this.entities[entityId] as (Entity & WithComponents<T>);
+    public getEntity<TComponents extends Components = {}>(entityId: Entity['id']): (Entity<TComponents>) {
+        return this.entities[entityId] as (Entity<TComponents>);
     }
 
-    public getEntities<T = {}>(entityFilter: ComponentFilter = {}): (Entity & WithComponents<T>)[] {
+    public getEntities<TComponents extends Components = {}>(
+        entityFilter: ComponentFilter = {}
+    ): (Entity<TComponents>)[] {
         if (!this.currentRoom) {
             return [];
         }
 
-        return this.filterEntities(this.currentRoom.entities, entityFilter);
+        return this.filterEntities<TComponents>(this.currentRoom.entities, entityFilter);
     }
 
-    public filterEntities<T = {}>(
+    public filterEntities<TComponents extends Components = {}>(
         entityIds: Entity['id'][],
         entityFilter: ComponentFilter
-    ): (Entity & WithComponents<T>)[] {
+    ): (Entity<TComponents>)[] {
         return Object.entries(entityFilter)
             .reduce((entityIds: Entity['id'][], [componentName, filterValue]): Entity['id'][] => {
                 if (!this.state.componentsMap.hasOwnProperty(componentName)) {
@@ -417,8 +426,8 @@ export default class Hex {
                     return this.state.componentsMap[componentName].hasOwnProperty(entityId) &&
                         !!this.state.componentsMap[componentName][entityId];
                 });
-            }, entityIds).map((entityId): (Entity & WithComponents<T>) => {
-                return this.getEntity(entityId) as (Entity & WithComponents<T>);
+            }, entityIds).map((entityId): (Entity<TComponents>) => {
+                return this.getEntity(entityId) as (Entity<TComponents>);
             });
     }
 
@@ -488,22 +497,21 @@ export default class Hex {
         return this.state.componentsMap[componentName][entityId];
     }
 
-    public getComponentsForEntity(entityId: Entity['id']): Components {
+    public getComponentsForEntity<TComponents extends Components = {}>(entityId: Entity['id']): TComponents {
         if (!this.entities.hasOwnProperty(entityId)) {
             throw new Error(`No entity with ${entityId} found.`);
         }
 
         return Object.keys(this.state.componentsMap)
-            .reduce((components: Components, componentName): Components => {
+            .reduce((components: TComponents, componentName): TComponents => {
                 if (this.state.componentsMap[componentName].hasOwnProperty(entityId)) {
-                    return {
-                        ...components,
+                    return Object.assign({}, components, {
                         [componentName]: this.state.componentsMap[componentName][entityId],
-                    }
+                    });
                 }
 
                 return components;
-            }, {});
+            }, {} as TComponents);
     }
 
     public addEventHandler(eventName: string, handler: EventHandler): void {
@@ -516,25 +524,25 @@ export default class Hex {
         };
     }
 
-    public addEventHandlerForEntities<T extends Components>(
+    public addEventHandlerForEntities<TComponents extends Components>(
         eventName: string,
-        handler: EventHandlerPerEntity<T>,
+        handler: EventHandlerPerEntity<TComponents>,
         entityFilter: ComponentFilter = {}
     ): void {
         this.addEventHandler(eventName, (engine, ...args): void => {
-            this.getEntities<T>(entityFilter).forEach((entity): void => {
+            this.getEntities<TComponents>(entityFilter).forEach((entity): void => {
                 handler(engine, entity, ...args);
             });
         });
     }
 
-    public addEventHandlerForEntityGroup<T extends Components>(
+    public addEventHandlerForEntityGroup<TComponents extends Components>(
         eventName: string,
-        handler: EventHandlerForEntityGroup<T>,
+        handler: EventHandlerForEntityGroup<TComponents>,
         entityFilter: ComponentFilter = {}
     ): void {
         this.addEventHandler(eventName, (engine, ...args): void => {
-            handler(engine, this.getEntities<T>(entityFilter), ...args);
+            handler(engine, this.getEntities<TComponents>(entityFilter), ...args);
         });
     }
 

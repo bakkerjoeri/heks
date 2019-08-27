@@ -1,16 +1,16 @@
-import Hex, { WithModules } from './../Hex.js';
+import Hex from './../Hex.js';
 import Module from './../Module.js';
 import arrayWithout from './../utilities/arrayWithout.js';
 
 export type Key = string;
 
 export default class Keyboard implements Module {
-    public engine: Hex & WithModules<{ Keyboard: Keyboard }>;
+    public engine: Hex;
     public pressedKeys: Key[] = [];
     public activeKeys: Key[] = [];
     public releasedKeys: Key[] = [];
 
-    public constructor(engine: Hex & WithModules<{ Keyboard: Keyboard }>) {
+    public constructor(engine: Hex) {
         this.engine = engine;
 
         window.addEventListener('keydown', (event: KeyboardEvent): void => {

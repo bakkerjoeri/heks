@@ -1,10 +1,14 @@
-import { createEntityProxy } from './Entity.js';
+import Entity from './Entity.js';
+import Graphics2D from './modules/Graphics2D.js';
+import Keyboard from './modules/Keyboard.js';
+import Mouse from './modules/Mouse.js';
 import createUuid from './utilities/createUuid.js';
 import isEmptyObject from './utilities/isEmptyObject.js';
+import findElementOrSelector from './utilities/findElementOrSelector.js';
 import objectWithout from './utilities/objectWithout.js';
 import arrayWithout from './utilities/arrayWithout.js';
 export default class Hex {
-    constructor(modules = {}, containerElementOrSelector, size, scale) {
+    constructor(containerElementOrSelector = 'body', size = { width: 0, height: 0 }, scale = 1) {
         this.isRunning = false;
         this.state = {
             componentsMap: {},
@@ -14,10 +18,20 @@ export default class Hex {
         };
         this.entities = {};
         this.eventHandlers = {};
-        this.setupCanvas(containerElementOrSelector, size, scale);
-        Object.keys(modules).forEach((moduleName) => {
-            this.registerModule(moduleName, modules[moduleName]);
-        });
+        this.modules = {
+            Graphics2D: new Graphics2D(this),
+            Keyboard: new Keyboard(this),
+            Mouse: new Mouse(this),
+        };
+        this.size = size;
+        this.scale = scale;
+        this.canvas = document.createElement('canvas');
+        const context = this.canvas.getContext('2d');
+        if (!context) {
+            throw new Error('Could not create context 2D on canvas.');
+        }
+        this.context = context;
+        this.setupCanvas(this.canvas, containerElementOrSelector);
         this.step = this.step.bind(this);
     }
     start() {
@@ -29,38 +43,21 @@ export default class Hex {
     stop() {
         this.isRunning = false;
     }
-    registerModule(name, ModuleClass) {
-        if (this.hasOwnProperty(name)) {
-            throw new Error(`Cannot register a module under name ${name} because that's already a property of Hex.`);
-        }
-        this[name] = new ModuleClass(this);
-    }
-    setupCanvas(containerElementOrSelector = 'body', size = { width: 0, height: 0 }, scale = 1) {
-        this.size = size;
-        this.scale = scale;
-        this.canvas = document.createElement('canvas');
-        this.context = this.canvas.getContext('2d');
-        this.canvas.setAttribute('width', size.width.toString());
-        this.canvas.setAttribute('height', size.height.toString());
-        const canvasStyle = this.canvas.style;
-        canvasStyle.width = `${size.width * scale}px`;
-        canvasStyle.height = `${size.height * scale}px`;
+    setupCanvas(canvas, containerElementOrSelector = 'body') {
+        canvas.setAttribute('width', this.size.width.toString());
+        canvas.setAttribute('height', this.size.height.toString());
+        const canvasStyle = canvas.style;
+        canvasStyle.width = `${this.size.width * this.scale}px`;
+        canvasStyle.height = `${this.size.height * this.scale}px`;
         canvasStyle.imageRendering = '-moz-crisp-edges';
         canvasStyle.imageRendering = '-webkit-crisp-edges';
         canvasStyle.imageRendering = 'pixelated';
         canvasStyle.backgroundColor = 'black';
-        let container;
-        if (typeof containerElementOrSelector === 'string') {
-            let containerSelector = containerElementOrSelector;
-            container = document.querySelector(containerSelector);
-            if (!container) {
-                throw new Error(`Could not add canvas to container. No element found for selector ${containerSelector}.`);
-            }
+        let container = findElementOrSelector(containerElementOrSelector);
+        if (!container) {
+            throw new Error(`Unable to find container for canvas ${container}.`);
         }
-        else {
-            container = containerElementOrSelector;
-        }
-        container.appendChild(this.canvas);
+        container.appendChild(canvas);
     }
     step(timeElapsed) {
         this.update(timeElapsed);
@@ -101,6 +98,9 @@ export default class Hex {
         this.state.currentRoomId = roomId;
     }
     get currentRoom() {
+        if (!this.state.currentRoomId) {
+            throw new Error('There is no current room. Please set one before expecting it.');
+        }
         return this.state.rooms[this.state.currentRoomId];
     }
     createLayer(name, depth = 0, roomId = this.state.currentRoomId) {
@@ -165,7 +165,7 @@ export default class Hex {
         viewport.entityToFollow = entityId;
     }
     createEntity(components = {}, roomId = this.state.currentRoomId) {
-        const entity = createEntityProxy(this);
+        const entity = new Entity(this);
         this.entities = Object.assign({}, this.entities, { [entity.id]: entity });
         this.setComponentsForEntity(components, entity.id);
         this.addEntityToRoom(roomId, entity.id);
@@ -255,7 +255,9 @@ export default class Hex {
         return Object.keys(this.state.componentsMap)
             .reduce((components, componentName) => {
             if (this.state.componentsMap[componentName].hasOwnProperty(entityId)) {
-                return Object.assign({}, components, { [componentName]: this.state.componentsMap[componentName][entityId] });
+                return Object.assign({}, components, {
+                    [componentName]: this.state.componentsMap[componentName][entityId],
+                });
             }
             return components;
         }, {});

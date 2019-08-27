@@ -1,5 +1,5 @@
 import arrayWithout from './../utilities/arrayWithout.js';
-import { findEntitiesAtPosition } from './Renderer.js';
+import { findEntitiesAtPosition } from './Graphics2D.js';
 const MouseButtonMap = {
     0: 'left',
     1: 'middle',
