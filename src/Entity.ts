@@ -1,87 +1,36 @@
 import Hex from './Hex.js';
-import { Components } from './Component.js';
+import { Component, Components } from './Component.js';
 import createUuid from './utilities/createUuid.js';
 
-export type Entity<TComponents extends Components = {}> = {
-    id: string;
-    engine: Hex;
-    hasComponent: (componentName: string) => boolean;
-    components: TComponents;
-} & {
-    [Property in keyof TComponents]: TComponents[Property];
-}
+export default class Entity<TComponents extends Components = {}> {
+    public id: string;
+    private engine: Hex;
 
-export function createEntityProxy(
-    engine: Hex,
-    entityId: Entity['id'] = createUuid()
-): Entity {
-    return new Proxy({
-        engine,
-        id: entityId,
-        hasComponent(componentName: string): boolean {
-            return engine.state.componentsMap.hasOwnProperty(componentName) &&
-                engine.state.componentsMap[componentName].hasOwnProperty(entityId);
-        },
-        get components(): Components {
-            return engine.getComponentsForEntity(entityId)
-        },
-        set components(newComponents) {
-            engine.setComponentsForEntity(newComponents, entityId);
-        },
-    }, {
-        get: (target, property: string, receiver): any => {
-            if (target.hasOwnProperty(property)) {
-                return Reflect.get(target, property, receiver);
-            }
+    public constructor(
+        engine: Hex,
+        entityId: Entity['id'] = createUuid()
+    ) {
+        this.id = entityId;
+        this.engine = engine;
+    }
 
-            if (property === 'components') {
-                return target.engine.getComponentsForEntity(target.id);
-            }
+    public has(componentName: string): boolean {
+        return !!this.engine.getValueOfComponentForEntity(componentName, this.id);
+    }
 
-            return target.engine.getValueOfComponentForEntity(property, target.id);
-        },
-        set: (target, property: string, value): boolean => {
-            if (property === 'id' || property === 'engine') {
-                throw new Error(`Property "${property}" of an entity cannot be changed.`);
-            }
+    public set(componentName: string, value: Component): void {
+        this.engine.setComponentForEntity(componentName, value, this.id);
+    }
 
-            if (target.hasOwnProperty(property)) {
-                return Reflect.set(target, property, value);
-            }
+    public remove(componentName: string): void {
+        this.engine.removeComponentFromEntity(componentName, this.id);
+    }
 
-            target.engine.setComponentForEntity(property, value, target.id);
+    public get components(): TComponents {
+        return this.engine.getComponentsForEntity<TComponents>(this.id);
+    }
 
-            return true;
-        },
-        ownKeys: (target): (string | number | symbol)[] => {
-            return [
-                ...Reflect.ownKeys(target),
-                ...Object.keys(target.engine.getComponentsForEntity(target.id)),
-            ];
-        },
-        getOwnPropertyDescriptor: (): PropertyDescriptor => {
-            return {
-                enumerable: true,
-                configurable: true,
-            };
-        },
-        defineProperty(target, property: string, descriptor): boolean {
-            if (target.hasOwnProperty(property)) {
-                return Reflect.defineProperty(target, property, descriptor);
-            }
-
-            target.engine.setComponentForEntity(property, descriptor.value, target.id);
-
-            return true;
-        },
-        deleteProperty: (target, property: string): boolean => {
-            if (property === 'id' || property === 'engine') {
-                throw new Error(`Deleting property ${property} of entity will break the proxy.`)
-            }
-
-            target.engine.removeComponentFromEntity(property, target.id);
-
-            return true;
-        }
-    });
+    public set components(newComponents) {
+        this.engine.setComponentsForEntity(newComponents, this.id);
+    }
 }

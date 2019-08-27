@@ -1,13 +1,48 @@
-import Hex, { Boundaries, Room, Viewport, Position, PositionComponent } from './../Hex.js';
-import SpriteManager from './SpriteManager.js';
-import { Entity } from './../Entity.js';
+import Hex, { Boundaries, Room, Viewport, Position, PositionComponent, Size, Offset } from './../Hex.js';
+import { Components } from './../Component.js';
+import Entity from './../Entity.js';
 import Module from './../Module.js';
-import { SpriteComponent, getImageForFilePath } from './SpriteManager.js';
+import { ComponentObject } from './../Component.js';
 
-export default class Renderer implements Module {
-    public engine: Hex<{ Renderer: Renderer; SpriteManager: SpriteManager }>;
+export const imageCache: {
+    [filePath: string]: HTMLImageElement;
+} = {};
 
-    public constructor(engine: Hex<{ Renderer: Renderer; SpriteManager: SpriteManager }>) {
+export interface SpriteSheet {
+    name: string;
+    file: string;
+    frameSize: Size;
+    frameStart: number;
+    frameTotal: number;
+    frames: number[];
+    origin: Offset;
+}
+
+export interface Sprite {
+    id: string;
+    file: string;
+    frames: SpriteFrame[];
+    origin: Offset;
+}
+
+export interface SpriteFrame {
+    size: Size;
+    offset: Offset;
+}
+
+export interface SpriteComponent extends ComponentObject {
+    id: Sprite['id'];
+    frame: number;
+    framesPerSecond: number;
+    isAnimating: boolean;
+    isLooping: boolean;
+    animationStart?: number;
+}
+
+export default class Graphics2D implements Module {
+    public engine: Hex;
+
+    public constructor(engine: Hex) {
         this.engine = engine;
 
         engine.addEventHandler('beforeDraw', updateViewportPositions);
@@ -26,41 +61,123 @@ export default class Renderer implements Module {
             'position': true,
         });
     }
+
+    public sprites: { [spriteId in Sprite['id']]: Sprite } = {};
+
+    public loadSpriteAtlas(sprites: SpriteSheet[]): void {
+        sprites.forEach((spriteDefinition): void => {
+            this.createSpriteFromSpriteSheet(spriteDefinition);
+        });
+    }
+
+    public createSprite(
+        id: Sprite['id'],
+        file: Sprite['file'],
+        frames: Sprite['frames'],
+        origin: Sprite['origin'] = { top: 0, left: 0 }
+    ): Sprite {
+        const newSprite: Sprite = {
+            id,
+            file,
+            frames,
+            origin,
+        };
+
+        this.sprites = {
+            ...this.sprites,
+            [newSprite.id]: newSprite,
+        };
+
+        return newSprite;
+    }
+
+    public createSpriteFromSpriteSheet(spriteSheet: SpriteSheet): void {
+        const frames = spriteSheet.frames.reduce((frameSet: SpriteFrame[], frameIndex): SpriteFrame[] => {
+            const frameRow = 0;
+            const frameColumn = frameIndex + spriteSheet.frameStart;
+
+            return [
+                ...frameSet,
+                {
+                    size: spriteSheet.frameSize,
+                    offset: {
+                        top: frameRow * spriteSheet.frameSize.height,
+                        left: frameColumn * spriteSheet.frameSize.width,
+                    }
+                }
+            ]
+        }, []);
+
+        this.createSprite(
+            spriteSheet.name,
+            spriteSheet.file,
+            frames,
+            spriteSheet.origin,
+        );
+    }
+
+    public getComponentForSprite(
+        spriteId: SpriteComponent['id'],
+        framesPerSecond: SpriteComponent['framesPerSecond'] = 0,
+        isAnimating: SpriteComponent['isAnimating'] = false,
+        isLooping: SpriteComponent['isLooping'] = false,
+        startFrame: SpriteComponent['frame'] = 0
+    ): SpriteComponent {
+        if (!this.sprites.hasOwnProperty(spriteId)) {
+            throw new Error(`Sprite with ${spriteId} doesn't exist.`);
+        }
+
+        return {
+            id: spriteId,
+            frame: startFrame,
+            framesPerSecond,
+            isAnimating,
+            isLooping,
+        }
+    }
+
+    public getSprite(spriteId: Sprite['id']): Sprite {
+        if (!this.sprites.hasOwnProperty(spriteId)) {
+            throw new Error(`Sprite with ${spriteId} doesn't exist.`);
+        }
+
+        return this.sprites[spriteId];
+    }
 }
 
 export function updateSpriteFrame(
-    engine: Hex & { SpriteManager: SpriteManager },
-    entity: Entity & { sprite: SpriteComponent },
+    engine: Hex,
+    entity: Entity<{ sprite: SpriteComponent }>,
     timeElapsed: number
 ): void {
-    const spriteAsset = engine.SpriteManager.getSprite(entity.sprite.id);
+    const spriteAsset = engine.modules.Graphics2D.getSprite(entity.components.sprite.id);
 
-    if (!entity.sprite.isAnimating) {
-        delete entity.sprite.animationStart;
+    if (!entity.components.sprite.isAnimating) {
+        delete entity.components.sprite.animationStart;
 
         return;
     }
 
-    if (spriteAsset.frames.length <= 1 || entity.sprite.framesPerSecond === 0) {
+    if (spriteAsset.frames.length <= 1 || entity.components.sprite.framesPerSecond === 0) {
         return;
     }
 
-    if (!entity.sprite.hasOwnProperty('animationStart')) {
-        entity.sprite.animationStart = timeElapsed;
+    if (!entity.components.sprite.hasOwnProperty('animationStart')) {
+        entity.components.sprite.animationStart = timeElapsed;
     }
 
-    entity.sprite.frame = calculateFrameIndexFromTimeDifference(
+    entity.components.sprite.frame = calculateFrameIndexFromTimeDifference(
         spriteAsset.frames.length,
-        entity.sprite.framesPerSecond,
-        entity.sprite.animationStart,
+        entity.components.sprite.framesPerSecond,
+        entity.components.sprite.animationStart,
         timeElapsed,
-        entity.sprite.isLooping,
+        entity.components.sprite.isLooping,
     );
 }
 
 
 export function drawEntitySprite(
-    engine: Hex<{ SpriteManager: SpriteManager }>,
+    engine: Hex,
     entities: (Entity<{ position: PositionComponent; sprite: SpriteComponent }>)[]
 ): void {
     engine.getViewportsInCurrentRoom().forEach((viewport): void => {
@@ -89,19 +206,19 @@ export function drawEntitySprite(
                     return isEntityVisibleInViewport(
                         entity,
                         viewport,
-                        engine as Hex<{ SpriteManager: SpriteManager }>
+                        engine
                     );
                 }
             }
         );
 
         sortByDepth(visibleEntities, engine.currentRoom).forEach((entity): void => {
-            const sprite = engine.modules.SpriteManager.sprites[entity.sprite.id];
-            const spriteFrame = sprite.frames[entity.sprite.frame];
+            const sprite = engine.modules.Graphics2D.sprites[entity.components.sprite.id];
+            const spriteFrame = sprite.frames[entity.components.sprite.frame];
 
             const drawPosition = {
-                x: (entity.position.x + sprite.origin.left) - (viewport.position.x - viewport.origin.x),
-                y: (entity.position.y + sprite.origin.top) - (viewport.position.y - viewport.origin.y),
+                x: (entity.components.position.x + sprite.origin.left) - (viewport.position.x - viewport.origin.x),
+                y: (entity.components.position.y + sprite.origin.top) - (viewport.position.y - viewport.origin.y),
             }
 
             engine.context.drawImage(
@@ -116,40 +233,40 @@ export function drawEntitySprite(
 }
 
 export function calculateEntityBounds(
-    engine: Hex<{ SpriteManager: SpriteManager }>,
+    engine: Hex,
     entity: Entity<{ position?: PositionComponent; sprite?: SpriteComponent }>
 ): Boundaries {
-    if (!entity.position) {
+    if (!entity.components.position) {
         throw new Error(`Entity with ID ${entity.id} has no position to calculate bounds for.`);
     }
 
-    if (!entity.sprite) {
+    if (!entity.components.sprite) {
         return {
-            ...entity.position,
+            ...entity.components.position,
             width: 0,
             height: 0,
         }
     }
 
-    const sprite = engine.modules.SpriteManager.sprites[entity.sprite.id];
-    const spriteFrame = sprite.frames[entity.sprite.frame];
+    const sprite = engine.modules.Graphics2D.sprites[entity.components.sprite.id];
+    const spriteFrame = sprite.frames[entity.components.sprite.frame];
 
     return {
-        ...entity.position,
+        ...entity.components.position,
         ...spriteFrame.size,
     };
 }
 
 export function calculateViewportPositionCenteredOnEntity(
-    engine: Hex<{ SpriteManager: SpriteManager }>,
+    engine: Hex,
     viewport: Viewport,
     room: Room,
     entityToFollow?: Entity<{ position: PositionComponent; sprite: SpriteComponent }>
 ): Position {
     if (
         !entityToFollow ||
-        !entityToFollow.position ||
-        !entityToFollow.sprite
+        !entityToFollow.components.position ||
+        !entityToFollow.components.sprite
     ) {
         return viewport.position;
     }
@@ -171,7 +288,7 @@ export function calculateViewportPositionCenteredOnEntity(
     return newViewportPosition;
 }
 
-export function updateViewportPositions(engine: Hex<{ SpriteManager: SpriteManager }>): void {
+export function updateViewportPositions(engine: Hex): void {
     const viewportsToUpdate = engine.getViewportsInCurrentRoom().filter((viewport): boolean => {
         return viewport.entityToFollow !== null;
     }) as (Viewport & { entityToFollow: Entity })[];
@@ -187,7 +304,7 @@ export function updateViewportPositions(engine: Hex<{ SpriteManager: SpriteManag
 }
 
 export function isEntityAtPosition(
-    engine: Hex<{ SpriteManager: SpriteManager }>,
+    engine: Hex,
     entity: Entity,
     position: Position
 ): boolean {
@@ -200,19 +317,19 @@ export function isEntityAtPosition(
 }
 
 
-function sortByDepth<T extends Entity & { layer?: string; depth?: number }>(
-    entities: T[],
+function sortByDepth<TEntity extends Entity<{ layer?: string; depth?: number } & Components>>(
+    entities: TEntity[],
     inRoom: Room
-): T[] {
+): TEntity[] {
     return [...entities].sort((entityA, entityB): number => {
-        const layerDepthA = inRoom.layers[entityA.layer || 'default'];
-        const layerDepthB = inRoom.layers[entityB.layer || 'default'];
+        const layerDepthA = inRoom.layers[entityA.components.layer || 'default'];
+        const layerDepthB = inRoom.layers[entityB.components.layer || 'default'];
 
         if (layerDepthA > layerDepthB) return -1;
         if (layerDepthA < layerDepthB) return 1;
 
-        const depthA = (entityA.depth || 0);
-        const depthB = (entityB.depth || 0);
+        const depthA = (entityA.components.depth || 0);
+        const depthB = (entityB.components.depth || 0);
 
         if (depthA > depthB) return -1;
         if (depthA < depthB) return 1;
@@ -222,20 +339,22 @@ function sortByDepth<T extends Entity & { layer?: string; depth?: number }>(
 }
 
 export function findEntitiesAtPosition(
-    engine: Hex<{ SpriteManager: SpriteManager }>,
+    engine: Hex,
     position: Position
-): (Entity & { position: Position })[] {
+): (Entity<{ position: PositionComponent }>)[] {
     const entitiesWithPosition = engine.getEntities<{ position: Position }>({ position: true });
     const entitiesAtPosition = entitiesWithPosition
         .filter((entity): boolean => isEntityAtPosition(engine, entity, position));
 
-    return sortByDepth(entitiesAtPosition, engine.currentRoom).reverse();
+    const sortedEntities = sortByDepth(entitiesAtPosition, engine.currentRoom).reverse();
+
+    return sortedEntities;
 }
 
 export function isEntityVisibleInViewport(
     entity: Entity<{ position?: PositionComponent; sprite?: SpriteComponent }>,
     viewport: Viewport,
-    engine: Hex<{ SpriteManager: SpriteManager }>,
+    engine: Hex,
 ): boolean {
     const entityBounds = calculateEntityBounds(engine, entity);
 
@@ -259,4 +378,14 @@ export function calculateFrameIndexFromTimeDifference(
     }
 
     return Math.min((Math.round(elapsed / 1000) / framesPerSecond), amountOfFrames - 1);
+}
+
+export function getImageForFilePath(filePath: string, shouldGetCached: boolean = true): HTMLImageElement {
+    if (!imageCache[filePath] || !shouldGetCached) {
+        const image = new Image();
+        image.src = filePath;
+        imageCache[filePath] = image;
+    }
+
+    return imageCache[filePath];
 }

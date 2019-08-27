@@ -1,6 +1,8 @@
-import { Entity, createEntityProxy } from './Entity.js';
+import Entity from './Entity.js';
 import { Components, Component, ComponentPrimitive, ComponentObject } from './Component.js';
-import { Modules, ConstructableModules } from './Module.js';
+import Graphics2D from './modules/Graphics2D.js';
+import Keyboard from './modules/Keyboard.js';
+import Mouse from './modules/Mouse.js';
 import createUuid from './utilities/createUuid.js';
 import isEmptyObject from './utilities/isEmptyObject.js';
 import findElementOrSelector from './utilities/findElementOrSelector.js';
@@ -54,25 +56,23 @@ export interface Constructable<TClass> {
     new (...args: any[]): TClass;
 }
 
-export type EventHandler<TModulesOfEngine extends Modules<TModulesOfEngine> = {}> = (
-    engine: Hex<TModulesOfEngine>,
+export type EventHandler = (
+    engine: Hex,
     ...args: any[]
 ) => void;
 
 export type EventHandlerPerEntity<
-    TModulesOfEngine extends Modules<TModulesOfEngine> = {},
     TComponents extends Components = {}
 > = (
-    engine: Hex<TModulesOfEngine>,
+    engine: Hex,
     entity: Entity<TComponents>,
     ...args: any[]
 ) => void;
 
 export type EventHandlerForEntityGroup<
-    TModulesOfEngine extends Modules<TModulesOfEngine> = {},
     TComponents extends Components = {}
 > = (
-    engine: Hex<TModulesOfEngine>,
+    engine: Hex,
     entities: (Entity<TComponents>)[],
     ...args: any[]
 ) => void;
@@ -101,7 +101,7 @@ interface CSSStyleDeclarationWithImageRendering extends CSSStyleDeclaration {
     imageRendering: string;
 }
 
-export default class Hex<TModules extends Modules<TModules> = {}> {
+export default class Hex {
     public canvas: HTMLCanvasElement;
     public context: CanvasRenderingContext2D;
     public isRunning: boolean = false;
@@ -113,29 +113,29 @@ export default class Hex<TModules extends Modules<TModules> = {}> {
         rooms: {},
         viewports: {},
     };
-    public modules: TModules;
+    public modules: {
+        Graphics2D: Graphics2D;
+        Keyboard: Keyboard;
+        Mouse: Mouse;
+    };
 
     private entities: {
         [entityId in Entity['id']]: Entity;
     } = {};
     private eventHandlers: {
-        [eventName: string]: EventHandler<TModules>[];
+        [eventName: string]: EventHandler[];
     } = {}
 
     public constructor(
-        modules: ConstructableModules<TModules>,
-        containerElementOrSelector: Element | string,
+        containerElementOrSelector: Element | string = 'body',
         size: Size = { width: 0, height: 0 },
         scale: number = 1
     ) {
-        this.modules = Object.keys(modules).reduce((
-            allModules: TModules,
-            moduleName: string
-        ): TModules => {
-            return Object.assign({}, allModules, {
-                [moduleName]: modules[moduleName],
-            });
-        }, {} as TModules);
+        this.modules = {
+            Graphics2D: new Graphics2D(this),
+            Keyboard: new Keyboard(this),
+            Mouse: new Mouse(this),
+        };
 
         this.size = size;
         this.scale = scale;
@@ -354,7 +354,7 @@ export default class Hex<TModules extends Modules<TModules> = {}> {
         components: Components = {},
         roomId: Room['id'] = this.state.currentRoomId as string
     ): Entity {
-        const entity = createEntityProxy(this);
+        const entity = new Entity(this);
 
         this.entities = {
             ...this.entities,
@@ -497,25 +497,24 @@ export default class Hex<TModules extends Modules<TModules> = {}> {
         return this.state.componentsMap[componentName][entityId];
     }
 
-    public getComponentsForEntity(entityId: Entity['id']): Components {
+    public getComponentsForEntity<TComponents extends Components = {}>(entityId: Entity['id']): TComponents {
         if (!this.entities.hasOwnProperty(entityId)) {
             throw new Error(`No entity with ${entityId} found.`);
         }
 
         return Object.keys(this.state.componentsMap)
-            .reduce((components: Components, componentName): Components => {
+            .reduce((components: TComponents, componentName): TComponents => {
                 if (this.state.componentsMap[componentName].hasOwnProperty(entityId)) {
-                    return {
-                        ...components,
+                    return Object.assign({}, components, {
                         [componentName]: this.state.componentsMap[componentName][entityId],
-                    }
+                    });
                 }
 
                 return components;
-            }, {});
+            }, {} as TComponents);
     }
 
-    public addEventHandler(eventName: string, handler: EventHandler<TModules>): void {
+    public addEventHandler(eventName: string, handler: EventHandler): void {
         this.eventHandlers = {
             ...this.eventHandlers,
             [eventName]: [
@@ -527,7 +526,7 @@ export default class Hex<TModules extends Modules<TModules> = {}> {
 
     public addEventHandlerForEntities<TComponents extends Components>(
         eventName: string,
-        handler: EventHandlerPerEntity<TModules, TComponents>,
+        handler: EventHandlerPerEntity<TComponents>,
         entityFilter: ComponentFilter = {}
     ): void {
         this.addEventHandler(eventName, (engine, ...args): void => {
@@ -539,7 +538,7 @@ export default class Hex<TModules extends Modules<TModules> = {}> {
 
     public addEventHandlerForEntityGroup<TComponents extends Components>(
         eventName: string,
-        handler: EventHandlerForEntityGroup<TModules, TComponents>,
+        handler: EventHandlerForEntityGroup<TComponents>,
         entityFilter: ComponentFilter = {}
     ): void {
         this.addEventHandler(eventName, (engine, ...args): void => {
