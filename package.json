@@ -2,7 +2,7 @@
   "name": "heks",
   "version": "1.0.0",
   "description": "A JavaScript game engine leveraging events and entities composed of components. ",
-  "repository": "git://github.com/joeribakker/hex.git",
+  "repository": "git://github.com/joeribakker/heks.git",
   "author": "Joeri Bakker <bakkerjoeri@gmail.com>",
   "license": "WTFPL",
   "private": false,

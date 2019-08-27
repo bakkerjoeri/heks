@@ -1,5 +1,5 @@
-import Hex from './Hex.js';
+import Heks from './Heks.js';
 export default class Module {
-    engine: Hex;
-    constructor(engine: Hex);
+    engine: Heks;
+    constructor(engine: Heks);
 }

@@ -1,12 +1,12 @@
-import Hex from './../Hex.js';
+import Heks from './../Heks.js';
 import Module from './../Module.js';
 export declare type Key = string;
 export default class Keyboard implements Module {
-    engine: Hex;
+    engine: Heks;
     pressedKeys: Key[];
     activeKeys: Key[];
     releasedKeys: Key[];
-    constructor(engine: Hex);
+    constructor(engine: Heks);
     isKeyPressed(key: Key): boolean;
     isKeyDown(key: Key): boolean;
     isKeyReleased(key: Key): boolean;
