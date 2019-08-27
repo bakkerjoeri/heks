@@ -1,9 +1,9 @@
-import Hex from './Hex.js';
+import Heks from './Heks.js';
 
 export default class Module {
-    public engine: Hex;
+    public engine: Heks;
 
-    public constructor(engine: Hex) {
+    public constructor(engine: Heks) {
         this.engine = engine;
     }
 }

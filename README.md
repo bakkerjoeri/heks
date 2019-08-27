@@ -1,8 +1,8 @@
-# ☞ Hex Engine
+# ☞ Heks Engine
 
 An JavaScript game engine leveraging events and entities composed of components. It's fully typed, so you can also build your game in TypeScript.
 
 ## Installation
 ```bash
-npm install @hex/engine
+npm install heks
 ```

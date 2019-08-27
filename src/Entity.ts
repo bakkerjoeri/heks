@@ -1,13 +1,13 @@
-import Hex from './Hex.js';
+import Heks from './Heks.js';
 import { Component, Components } from './Component.js';
 import createUuid from './utilities/createUuid.js';
 
 export default class Entity<TComponents extends Components = {}> {
     public id: string;
-    private engine: Hex;
+    private engine: Heks;
 
     public constructor(
-        engine: Hex,
+        engine: Heks,
         entityId: Entity['id'] = createUuid()
     ) {
         this.id = entityId;

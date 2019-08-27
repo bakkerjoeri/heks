@@ -48,7 +48,7 @@ export interface ComponentFilter {
     [componentName: string]: boolean | ComponentPrimitive | ((
         value: Component,
         entity: Entity,
-        engine: Hex
+        engine: Heks
     ) => boolean);
 }
 
@@ -57,14 +57,14 @@ export interface Constructable<TClass> {
 }
 
 export type EventHandler = (
-    engine: Hex,
+    engine: Heks,
     ...args: any[]
 ) => void;
 
 export type EventHandlerPerEntity<
     TComponents extends Components = {}
 > = (
-    engine: Hex,
+    engine: Heks,
     entity: Entity<TComponents>,
     ...args: any[]
 ) => void;
@@ -72,7 +72,7 @@ export type EventHandlerPerEntity<
 export type EventHandlerForEntityGroup<
     TComponents extends Components = {}
 > = (
-    engine: Hex,
+    engine: Heks,
     entities: (Entity<TComponents>)[],
     ...args: any[]
 ) => void;
@@ -101,7 +101,7 @@ interface CSSStyleDeclarationWithImageRendering extends CSSStyleDeclaration {
     imageRendering: string;
 }
 
-export default class Hex {
+export default class Heks {
     public canvas: HTMLCanvasElement;
     public context: CanvasRenderingContext2D;
     public isRunning: boolean = false;

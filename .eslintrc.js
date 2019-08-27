@@ -25,6 +25,7 @@ module.exports = {
         "prefer-template": "warn",
         "eqeqeq": "error",
         "no-console": "off",
+        'no-prototype-builtins': "off",
         "@typescript-eslint/no-use-before-define": ["error", { "functions": false, "classes": true }],
         "@typescript-eslint/no-explicit-any": "off",
         "@typescript-eslint/no-object-literal-type-assertion": "off",
