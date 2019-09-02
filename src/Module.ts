@@ -1,4 +1,4 @@
-import Heks from './Heks.js';
+import Heks, { Constructable } from './Heks.js';
 
 export default class Module {
     public engine: Heks;
@@ -7,3 +7,9 @@ export default class Module {
         this.engine = engine;
     }
 }
+
+export interface Modules {
+    [moduleName: string]: Module;
+}
+
+export type ConstructableModules = Constructable<Module>[];

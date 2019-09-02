@@ -4,6 +4,12 @@ import Entity from './../Entity.js';
 import Module from './../Module.js';
 import { ComponentObject } from './../Component.js';
 
+declare module './../Module' {
+    interface Modules {
+        Graphics2D: Graphics2D;
+    }
+}
+
 export const imageCache: {
     [filePath: string]: HTMLImageElement;
 } = {};
@@ -280,7 +286,7 @@ export function calculateViewportPositionCenteredOnEntity(
     const horizontalUpperBound = room.size.width - viewport.size.width;
     const verticalUpperBound = room.size.height - viewport.size.height;
 
-    let newViewportPosition = {
+    const newViewportPosition = {
         x: Math.min(Math.max(horizontalOffset, horizontalLowerBound), horizontalUpperBound),
         y: Math.min(Math.max(verticalOffset, verticalLowerBound), verticalUpperBound),
     };
@@ -369,9 +375,9 @@ export function calculateFrameIndexFromTimeDifference(
     framesPerSecond: SpriteComponent['framesPerSecond'],
     timeOfAnimationStart: SpriteComponent['animationStart'] = 0,
     currentTime: number,
-    isLooping: boolean = true
+    isLooping = true
 ): number {
-    let elapsed = currentTime - timeOfAnimationStart;
+    const elapsed = currentTime - timeOfAnimationStart;
 
     if (isLooping) {
         return Math.round(elapsed / (1000 / framesPerSecond)) % amountOfFrames;
@@ -380,7 +386,7 @@ export function calculateFrameIndexFromTimeDifference(
     return Math.min((Math.round(elapsed / 1000) / framesPerSecond), amountOfFrames - 1);
 }
 
-export function getImageForFilePath(filePath: string, shouldGetCached: boolean = true): HTMLImageElement {
+export function getImageForFilePath(filePath: string, shouldGetCached = true): HTMLImageElement {
     if (!imageCache[filePath] || !shouldGetCached) {
         const image = new Image();
         image.src = filePath;

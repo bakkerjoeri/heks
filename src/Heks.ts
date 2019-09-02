@@ -1,8 +1,6 @@
 import Entity from './Entity.js';
 import { Components, Component, ComponentPrimitive, ComponentObject } from './Component.js';
-import Graphics2D from './modules/Graphics2D.js';
-import Keyboard from './modules/Keyboard.js';
-import Mouse from './modules/Mouse.js';
+import { Modules, ConstructableModules } from './Module.js';
 import createUuid from './utilities/createUuid.js';
 import isEmptyObject from './utilities/isEmptyObject.js';
 import findElementOrSelector from './utilities/findElementOrSelector.js';
@@ -101,10 +99,18 @@ interface CSSStyleDeclarationWithImageRendering extends CSSStyleDeclaration {
     imageRendering: string;
 }
 
+interface HeksOptions {
+    modules?: ConstructableModules;
+    container?: Element | string;
+    size?: Size;
+    scale?: number;
+}
+
 export default class Heks {
     public canvas: HTMLCanvasElement;
     public context: CanvasRenderingContext2D;
-    public isRunning: boolean = false;
+    public isRunning = false;
+    public modules: Modules;
     public scale: number;
     public size: Size;
     public state: GameState = {
@@ -112,11 +118,6 @@ export default class Heks {
         currentRoomId: null,
         rooms: {},
         viewports: {},
-    };
-    public modules: {
-        Graphics2D: Graphics2D;
-        Keyboard: Keyboard;
-        Mouse: Mouse;
     };
 
     private entities: {
@@ -126,16 +127,17 @@ export default class Heks {
         [eventName: string]: EventHandler[];
     } = {}
 
-    public constructor(
-        containerElementOrSelector: Element | string = 'body',
-        size: Size = { width: 0, height: 0 },
-        scale: number = 1
-    ) {
-        this.modules = {
-            Graphics2D: new Graphics2D(this),
-            Keyboard: new Keyboard(this),
-            Mouse: new Mouse(this),
-        };
+    public constructor({
+        modules = [],
+        size = { width: 0, height: 0 },
+        container = 'body',
+        scale = 1,
+    }: HeksOptions = {}) {
+        this.modules = modules.reduce((allModules, ModuleClass) => {
+            return Object.assign({}, allModules, {
+                [ModuleClass.name]: new ModuleClass(this),
+            });
+        }, {} as Modules);
 
         this.size = size;
         this.scale = scale;
@@ -147,7 +149,7 @@ export default class Heks {
         }
 
         this.context = context;
-        this.setupCanvas(this.canvas, containerElementOrSelector);
+        this.setupCanvas(this.canvas, container);
         this.step = this.step.bind(this);
     }
 
@@ -177,7 +179,7 @@ export default class Heks {
         canvasStyle.imageRendering = 'pixelated';
         canvasStyle.backgroundColor = 'black';
 
-        let container = findElementOrSelector(containerElementOrSelector);
+        const container = findElementOrSelector(containerElementOrSelector);
 
         if (!container) {
             throw new Error(`Unable to find container for canvas ${container}.`);
@@ -210,8 +212,8 @@ export default class Heks {
     public createRoom(
         id: Room['id'] = createUuid(),
         size: Size = this.size,
-        setAsCurrent: boolean = false
-    ): void {
+        setAsCurrent = false
+    ): Room['id'] {
         const newRoom: Room = {
             id,
             size,
@@ -230,6 +232,8 @@ export default class Heks {
         if (setAsCurrent) {
             this.setCurrentRoom(newRoom.id);
         }
+
+        return id;
     }
 
     public setCurrentRoom(roomId: Room['id']): void {
@@ -250,7 +254,7 @@ export default class Heks {
 
     public createLayer(
         name: string,
-        depth: number = 0,
+        depth = 0,
         roomId: Room['id'] = this.state.currentRoomId as string
     ): void {
         this.state.rooms[roomId].layers[name] = depth;

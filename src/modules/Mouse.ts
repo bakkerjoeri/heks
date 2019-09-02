@@ -4,6 +4,12 @@ import Module from './../Module.js';
 import arrayWithout from './../utilities/arrayWithout.js';
 import { findEntitiesAtPosition } from './Graphics2D.js';
 
+declare module './../Module' {
+    interface Modules {
+        Mouse: Mouse;
+    }
+}
+
 type MouseButton = 'left' | 'middle' | 'right' | 'back' | 'forward';
 const MouseButtonMap: { [eventValue: number]: MouseButton } = {
     0: 'left',
@@ -40,7 +46,7 @@ export default class Mouse implements Module {
                 y: Math.round(Math.min(Math.max(event.clientY - canvasBounds.top, 0), canvasBounds.height) / engine.scale),
             };
 
-            let viewportWithFocus = viewports.find((viewport): boolean => {
+            const viewportWithFocus = viewports.find((viewport): boolean => {
                 return positionInViewport.x >= viewport.origin.x &&
                     positionInViewport.x <= viewport.origin.x + viewport.size.width &&
                     positionInViewport.y >= viewport.origin.y &&

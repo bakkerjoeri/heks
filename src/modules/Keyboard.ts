@@ -2,6 +2,12 @@ import Heks from './../Heks.js';
 import Module from './../Module.js';
 import arrayWithout from './../utilities/arrayWithout.js';
 
+declare module './../Module' {
+    interface Modules {
+        Keyboard: Keyboard;
+    }
+}
+
 export type Key = string;
 
 export default class Keyboard implements Module {
