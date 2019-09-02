@@ -28,7 +28,7 @@ export default class Mouse {
                 x: Math.round(Math.min(Math.max(event.clientX - canvasBounds.left, 0), canvasBounds.width) / engine.scale),
                 y: Math.round(Math.min(Math.max(event.clientY - canvasBounds.top, 0), canvasBounds.height) / engine.scale),
             };
-            let viewportWithFocus = viewports.find((viewport) => {
+            const viewportWithFocus = viewports.find((viewport) => {
                 return positionInViewport.x >= viewport.origin.x &&
                     positionInViewport.x <= viewport.origin.x + viewport.size.width &&
                     positionInViewport.y >= viewport.origin.y &&

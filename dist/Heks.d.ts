@@ -1,8 +1,6 @@
 import Entity from './Entity.js';
 import { Components, Component, ComponentPrimitive, ComponentObject } from './Component.js';
-import Graphics2D from './modules/Graphics2D.js';
-import Keyboard from './modules/Keyboard.js';
-import Mouse from './modules/Mouse.js';
+import { Modules, ConstructableModules } from './Module.js';
 export interface GameState {
     componentsMap: ComponentsEntityMap;
     currentRoomId: Room['id'] | null;
@@ -58,28 +56,30 @@ export interface Offset {
     left: number;
 }
 export declare type Boundaries = Size & Position;
+interface HeksOptions {
+    modules?: ConstructableModules;
+    container?: Element | string;
+    size?: Size;
+    scale?: number;
+}
 export default class Heks {
     canvas: HTMLCanvasElement;
     context: CanvasRenderingContext2D;
     isRunning: boolean;
+    modules: Modules;
     scale: number;
     size: Size;
     state: GameState;
-    modules: {
-        Graphics2D: Graphics2D;
-        Keyboard: Keyboard;
-        Mouse: Mouse;
-    };
     private entities;
     private eventHandlers;
-    constructor(containerElementOrSelector?: Element | string, size?: Size, scale?: number);
+    constructor({ modules, size, container, scale, }?: HeksOptions);
     start(): void;
     stop(): void;
     private setupCanvas;
     private step;
     private update;
     private draw;
-    createRoom(id?: Room['id'], size?: Size, setAsCurrent?: boolean): void;
+    createRoom(id?: Room['id'], size?: Size, setAsCurrent?: boolean): Room['id'];
     setCurrentRoom(roomId: Room['id']): void;
     readonly currentRoom: Room;
     createLayer(name: string, depth?: number, roomId?: Room['id']): void;
@@ -105,3 +105,4 @@ export default class Heks {
     addEventHandlerForEntityGroup<TComponents extends Components>(eventName: string, handler: EventHandlerForEntityGroup<TComponents>, entityFilter?: ComponentFilter): void;
     emitEvent(eventName: string, ...args: any[]): void;
 }
+export {};

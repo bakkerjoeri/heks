@@ -1,5 +1,10 @@
 import Heks from './../Heks.js';
 import Module from './../Module.js';
+declare module './../Module' {
+    interface Modules {
+        Keyboard: Keyboard;
+    }
+}
 export declare type Key = string;
 export default class Keyboard implements Module {
     engine: Heks;

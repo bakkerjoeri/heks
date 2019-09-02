@@ -1,6 +1,11 @@
 import Heks, { Position } from './../Heks.js';
 import Entity from './../Entity.js';
 import Module from './../Module.js';
+declare module './../Module' {
+    interface Modules {
+        Mouse: Mouse;
+    }
+}
 declare type MouseButton = 'left' | 'middle' | 'right' | 'back' | 'forward';
 export default class Mouse implements Module {
     engine: Heks;

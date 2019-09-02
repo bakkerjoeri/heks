@@ -2,6 +2,11 @@ import Heks, { Boundaries, Room, Viewport, Position, PositionComponent, Size, Of
 import Entity from './../Entity.js';
 import Module from './../Module.js';
 import { ComponentObject } from './../Component.js';
+declare module './../Module' {
+    interface Modules {
+        Graphics2D: Graphics2D;
+    }
+}
 export declare const imageCache: {
     [filePath: string]: HTMLImageElement;
 };

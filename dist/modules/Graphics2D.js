@@ -122,7 +122,7 @@ export function calculateViewportPositionCenteredOnEntity(engine, viewport, room
     const verticalLowerBound = 0;
     const horizontalUpperBound = room.size.width - viewport.size.width;
     const verticalUpperBound = room.size.height - viewport.size.height;
-    let newViewportPosition = {
+    const newViewportPosition = {
         x: Math.min(Math.max(horizontalOffset, horizontalLowerBound), horizontalUpperBound),
         y: Math.min(Math.max(verticalOffset, verticalLowerBound), verticalUpperBound),
     };
@@ -175,7 +175,7 @@ export function isEntityVisibleInViewport(entity, viewport, engine) {
         && entityBounds.y + entityBounds.height > viewport.position.y;
 }
 export function calculateFrameIndexFromTimeDifference(amountOfFrames, framesPerSecond, timeOfAnimationStart = 0, currentTime, isLooping = true) {
-    let elapsed = currentTime - timeOfAnimationStart;
+    const elapsed = currentTime - timeOfAnimationStart;
     if (isLooping) {
         return Math.round(elapsed / (1000 / framesPerSecond)) % amountOfFrames;
     }

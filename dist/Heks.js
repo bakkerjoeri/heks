@@ -1,14 +1,11 @@
 import Entity from './Entity.js';
-import Graphics2D from './modules/Graphics2D.js';
-import Keyboard from './modules/Keyboard.js';
-import Mouse from './modules/Mouse.js';
 import createUuid from './utilities/createUuid.js';
 import isEmptyObject from './utilities/isEmptyObject.js';
 import findElementOrSelector from './utilities/findElementOrSelector.js';
 import objectWithout from './utilities/objectWithout.js';
 import arrayWithout from './utilities/arrayWithout.js';
 export default class Heks {
-    constructor(containerElementOrSelector = 'body', size = { width: 0, height: 0 }, scale = 1) {
+    constructor({ modules = [], size = { width: 0, height: 0 }, container = 'body', scale = 1, } = {}) {
         this.isRunning = false;
         this.state = {
             componentsMap: {},
@@ -18,11 +15,11 @@ export default class Heks {
         };
         this.entities = {};
         this.eventHandlers = {};
-        this.modules = {
-            Graphics2D: new Graphics2D(this),
-            Keyboard: new Keyboard(this),
-            Mouse: new Mouse(this),
-        };
+        this.modules = modules.reduce((allModules, ModuleClass) => {
+            return Object.assign({}, allModules, {
+                [ModuleClass.name]: new ModuleClass(this),
+            });
+        }, {});
         this.size = size;
         this.scale = scale;
         this.canvas = document.createElement('canvas');
@@ -31,7 +28,7 @@ export default class Heks {
             throw new Error('Could not create context 2D on canvas.');
         }
         this.context = context;
-        this.setupCanvas(this.canvas, containerElementOrSelector);
+        this.setupCanvas(this.canvas, container);
         this.step = this.step.bind(this);
     }
     start() {
@@ -53,7 +50,7 @@ export default class Heks {
         canvasStyle.imageRendering = '-webkit-crisp-edges';
         canvasStyle.imageRendering = 'pixelated';
         canvasStyle.backgroundColor = 'black';
-        let container = findElementOrSelector(containerElementOrSelector);
+        const container = findElementOrSelector(containerElementOrSelector);
         if (!container) {
             throw new Error(`Unable to find container for canvas ${container}.`);
         }
@@ -90,6 +87,7 @@ export default class Heks {
         if (setAsCurrent) {
             this.setCurrentRoom(newRoom.id);
         }
+        return id;
     }
     setCurrentRoom(roomId) {
         if (!this.state.rooms.hasOwnProperty(roomId)) {
