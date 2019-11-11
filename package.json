@@ -1,7 +1,7 @@
 {
   "name": "heks",
   "version": "1.1.0",
-  "description": "A JavaScript game engine leveraging events and entities composed of components. ",
+  "description": "A game development framework in TypeScript",
   "repository": "git://github.com/bakkerjoeri/heks.git",
   "author": "Joeri Bakker <bakkerjoeri@gmail.com>",
   "license": "WTFPL",
