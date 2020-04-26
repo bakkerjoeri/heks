@@ -10,20 +10,20 @@
     "test": "jest",
     "build": "rm -rf dist && tsc",
     "version": "npm run build && git add -A dist",
-	"postversion": "git push && git push --tags"
+    "postversion": "git push && git push --tags"
   },
   "devDependencies": {
-    "@types/jest": "^24.0.18",
-    "@types/jsdom": "^12.2.4",
-    "@typescript-eslint/eslint-plugin": "^2.0.0",
-    "@typescript-eslint/parser": "^2.0.0",
-    "canvas": "^2.6.0",
-    "eslint": "^6.2.2",
-    "eslint-plugin-import": "^2.18.2",
-    "jest": "^24.9.0",
-    "jsdom": "^15.2.1",
-    "ts-jest": "^24.0.2",
-    "typescript": "^3.6.2"
+    "@types/jest": "^25.2.1",
+    "@types/jsdom": "^16.2.1",
+    "@typescript-eslint/eslint-plugin": "^2.29.0",
+    "@typescript-eslint/parser": "^2.29.0",
+    "canvas": "^2.6.1",
+    "eslint": "^6.8.0",
+    "eslint-plugin-import": "^2.20.2",
+    "jest": "^25.4.0",
+    "jsdom": "^16.2.2",
+    "ts-jest": "^25.4.0",
+    "typescript": "^3.8.3"
   },
   "dependencies": {}
 }
