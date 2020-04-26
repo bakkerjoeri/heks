@@ -4,20 +4,19 @@
   "description": "A game development framework in TypeScript",
   "repository": "git://github.com/bakkerjoeri/heks.git",
   "author": "Joeri Bakker <bakkerjoeri@gmail.com>",
-  "license": "WTFPL",
-  "private": false,
+  "license": "MIT",
   "main": "dist/index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "build": "rm -rf dist && tsc",
+    "version": "npm run build && git add -A dist",
+	"postversion": "git push && git push --tags"
   },
   "devDependencies": {
-    "@babel/core": "^7.4.4",
-    "@babel/preset-env": "^7.4.4",
     "@types/jest": "^24.0.18",
     "@types/jsdom": "^12.2.4",
     "@typescript-eslint/eslint-plugin": "^2.0.0",
     "@typescript-eslint/parser": "^2.0.0",
-    "babel-jest": "^24.9.0",
     "canvas": "^2.6.0",
     "eslint": "^6.2.2",
     "eslint-plugin-import": "^2.18.2",
