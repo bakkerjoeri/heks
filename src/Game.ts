@@ -4,9 +4,8 @@ import { setupGame } from './setupGame.js';
 import EventEmitter from './EventEmitter.js';
 
 interface GameOptions {
-	size: Size;
-	scale: number;
-	containerSelector?: string;
+	scale?: number;
+    containerSelector?: string;
 }
 
 export interface GameEvents {
@@ -19,22 +18,24 @@ export interface GameEvents {
 	afterDraw: { time: number };
 }
 
-const initialState = {
+export const defaultState: GameState = {
 	entities: {},
 	sprites: {},
 };
 
-export default class Game<Events extends GameEvents> {
+export default class Game<State extends GameState, Events extends GameEvents> {
 	public readonly canvas: HTMLCanvasElement;
 	public readonly context: CanvasRenderingContext2D;
     public readonly scale: number;
 
-	private state: GameState;
+	private state: State;
 	private readonly eventEmitter: EventEmitter<Events>;
 
 	constructor(
-		eventEmitter: EventEmitter<Events>,
-		{ size, scale, containerSelector = 'body' }: GameOptions
+        size: Size,
+        initialState: State,
+        eventEmitter: EventEmitter<Events>,
+		{ scale = 1, containerSelector = 'body' }: GameOptions
 	) {
         this.eventEmitter = eventEmitter;
         const { canvas, context } = setupGame(containerSelector, size, scale);
