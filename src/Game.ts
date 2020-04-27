@@ -3,7 +3,8 @@ import { start } from './tick.js';
 import { setupGame } from './setupGame.js';
 import EventEmitter from './EventEmitter.js';
 
-interface GameOptions {
+interface GameOptions<State> {
+    initialState?: State;
 	scale?: number;
     containerSelector?: string;
 }
@@ -33,9 +34,12 @@ export default class Game<State extends GameState, Events extends GameEvents> {
 
 	constructor(
         size: Size,
-        initialState: State,
         eventEmitter: EventEmitter<Events>,
-		{ scale = 1, containerSelector = 'body' }: GameOptions
+		{
+            initialState = defaultState as State,
+            scale = 1,
+            containerSelector = 'body'
+        }: GameOptions<State>
 	) {
         this.eventEmitter = eventEmitter;
         const { canvas, context } = setupGame(containerSelector, size, scale);
