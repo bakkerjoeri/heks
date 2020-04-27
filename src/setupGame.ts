@@ -10,8 +10,8 @@ export function setupGame(
 } {
     const canvas = document.createElement('canvas');
 
-    canvas.setAttribute('width', (size.width * window.devicePixelRatio).toString());
-    canvas.setAttribute('height', (size.height * window.devicePixelRatio).toString());
+    canvas.setAttribute('width', (size.width * scale * window.devicePixelRatio).toString());
+    canvas.setAttribute('height', (size.height * scale * window.devicePixelRatio).toString());
     canvas.style.width = `${size.width * scale}px`;
     canvas.style.height = `${size.height * scale}px`;
 
@@ -22,7 +22,7 @@ export function setupGame(
     }
 
     context.imageSmoothingEnabled = false;
-    context.scale(window.devicePixelRatio * scale, window.devicePixelRatio * scale);
+    context.scale(window.devicePixelRatio, window.devicePixelRatio);
 
     const gameElement = document.documentElement.querySelector(containerSelector);
 

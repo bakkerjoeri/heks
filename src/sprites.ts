@@ -43,7 +43,7 @@ export function drawSprite(
 		getImageForFilePath(sprite.path),
 		sprite.origin.x, sprite.origin.y,
 		sprite.size.width, sprite.size.height,
-		position.x + offset.x, position.y + offset.y,
+		(position.x + offset.x) * scale, (position.y + offset.y) * scale,
 		sprite.size.width * scale, sprite.size.height * scale,
     );
 }

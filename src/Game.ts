@@ -15,7 +15,7 @@ export interface GameEvents {
 	update: { time: number };
 	afterUpdate: { time: number };
 	beforeDraw: { time: number };
-	draw: { time: number; context: CanvasRenderingContext2D };
+	draw: { time: number; context: CanvasRenderingContext2D; scale: number };
 	afterDraw: { time: number };
 }
 
@@ -27,6 +27,7 @@ const initialState = {
 export default class Game<Events extends GameEvents> {
 	public readonly canvas: HTMLCanvasElement;
 	public readonly context: CanvasRenderingContext2D;
+    public readonly scale: number;
 
 	private state: GameState;
 	private readonly eventEmitter: EventEmitter<Events>;
@@ -35,11 +36,12 @@ export default class Game<Events extends GameEvents> {
 		eventEmitter: EventEmitter<Events>,
 		{ size, scale, containerSelector = 'body' }: GameOptions
 	) {
-		const { canvas, context } = setupGame(containerSelector, size, scale);
+        this.eventEmitter = eventEmitter;
+        const { canvas, context } = setupGame(containerSelector, size, scale);
 		this.canvas = canvas;
-		this.context = context;
+        this.context = context;
+        this.scale = scale;
 		this.state = {...initialState};
-		this.eventEmitter = eventEmitter;
 	}
 
 	public start(): void {
@@ -50,7 +52,7 @@ export default class Game<Events extends GameEvents> {
 			this.state = this.eventEmitter.emit('update', this.state, { time });
 			this.state = this.eventEmitter.emit('afterUpdate', this.state, { time });
 			this.state = this.eventEmitter.emit('beforeDraw', this.state, { time });
-			this.state = this.eventEmitter.emit('draw', this.state, { time, context: this.context });
+			this.state = this.eventEmitter.emit('draw', this.state, { time, context: this.context, scale: this.scale });
 			this.state = this.eventEmitter.emit('afterDraw', this.state, { time });
 		});
 	}
