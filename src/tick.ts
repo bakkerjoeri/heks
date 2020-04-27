@@ -1,4 +1,4 @@
-export type gameLoop = (time?: DOMHighResTimeStamp) => any;
+export type gameLoop = (time: number) => any;
 
 export function start(callback: gameLoop): void {
     scheduleNextTick(callback);

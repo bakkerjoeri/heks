@@ -1,9 +1,9 @@
 import { Size } from './types.js';
 
 export function setupGame(
-    selector: string,
+    containerSelector: string,
     size: Size,
-    scale: number
+    scale = 1
 ): {
     canvas: HTMLCanvasElement;
     context: CanvasRenderingContext2D;
@@ -22,15 +22,15 @@ export function setupGame(
     }
 
     context.imageSmoothingEnabled = false;
-    context.scale(window.devicePixelRatio, window.devicePixelRatio);
+    context.scale(window.devicePixelRatio * scale, window.devicePixelRatio * scale);
 
-    const gameElement = document.documentElement.querySelector(selector);
+    const gameElement = document.documentElement.querySelector(containerSelector);
 
     if (!gameElement) {
-        throw new Error(`Couldn't find element with selector ${selector} to mount canvas on.`)
+        throw new Error(`Couldn't find element with selector ${containerSelector} to mount canvas on.`)
     }
 
-    gameElement.replaceWith(canvas);
+    gameElement.appendChild(canvas);
 
     return {
         context,

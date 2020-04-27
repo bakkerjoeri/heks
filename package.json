@@ -25,5 +25,9 @@
     "ts-jest": "^25.4.0",
     "typescript": "^3.8.3"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@bakkerjoeri/array-without": "^2.0.2",
+    "@bakkerjoeri/object-without": "^1.0.1",
+    "@bakkerjoeri/uuid": "^1.0.0"
+  }
 }
