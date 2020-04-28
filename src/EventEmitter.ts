@@ -1,8 +1,15 @@
 import arrayWithout from '@bakkerjoeri/array-without';
 import objectWithout from '@bakkerjoeri/object-without';
 
-interface EventHandler<State, Event> {
-    (state: State, event: Event): State;
+interface EventHandlerContext<Events> {
+    on: EventEmitter<Events>['on'];
+    emit: EventEmitter<Events>['emit'];
+    remove: EventEmitter<Events>['remove'];
+    removeEventType: EventEmitter<Events>['on'];
+}
+
+interface EventHandler<State, Event, Events> {
+    (state: State, event: Event, context: EventHandlerContext<Events>): State;
 }
 
 export default class EventEmitter<Events> {
@@ -10,7 +17,7 @@ export default class EventEmitter<Events> {
 
     public on<EventType extends keyof Events, State>(
         eventType: EventType,
-        handler: EventHandler<State, Events[EventType]>
+        handler: EventHandler<State, Events[EventType], Events>
     ): void {
         this.eventHandlers = {
             ...this.eventHandlers,
@@ -23,7 +30,7 @@ export default class EventEmitter<Events> {
 
 	public remove<EventType extends keyof Events, State>(
 		eventType: EventType,
-		handler: EventHandler<State, Events[EventType]>
+		handler: EventHandler<State, Events[EventType], Events>
 	): void {
 		this.eventHandlers = {
 			...this.eventHandlers,
@@ -44,10 +51,15 @@ export default class EventEmitter<Events> {
             return initialState;
         }
 
-		const handlers = this.eventHandlers[eventType] as EventHandler<State, Events[EventType]>[];
+		const handlers = this.eventHandlers[eventType] as EventHandler<State, Events[EventType], Events>[];
 
 		return handlers.reduce((newState: State, currentHandler) => {
-			return currentHandler(newState, event);
+			return currentHandler(newState, event, {
+                on: this.on,
+                emit: this.emit,
+                remove: this.remove,
+                removeEventType: this.removeEventType,
+            });
 		}, initialState);
 	}
 }
