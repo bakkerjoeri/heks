@@ -5,7 +5,7 @@ interface EventHandlerContext<Events> {
     on: EventEmitter<Events>['on'];
     emit: EventEmitter<Events>['emit'];
     remove: EventEmitter<Events>['remove'];
-    removeEventType: EventEmitter<Events>['on'];
+    removeAll: EventEmitter<Events>['on'];
 }
 
 interface EventHandler<State, Event, Events> {
@@ -38,7 +38,7 @@ export default class EventEmitter<Events> {
 		};
 	}
 
-	public removeEventType<EventType extends keyof Events>(eventType: EventType): void {
+	public removeAll<EventType extends keyof Events>(eventType: EventType): void {
 		this.eventHandlers = objectWithout(this.eventHandlers, eventType);
 	}
 
@@ -58,7 +58,7 @@ export default class EventEmitter<Events> {
                 on: this.on,
                 emit: this.emit,
                 remove: this.remove,
-                removeEventType: this.removeEventType,
+                removeAll: this.removeAll,
             });
 		}, initialState);
 	}
