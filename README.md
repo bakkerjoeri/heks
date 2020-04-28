@@ -60,27 +60,7 @@ You can also emit events:
 ```ts
 import { getEntities, findEntity } from 'heks';
 
-game.on('update', (state) => {
-    const playerEntity = findEntity(getEntities(state), { isPlayer: true });
-
-    if (!playerEntity) {
-        return state;
-    }
-
-    if (playerEntity.state === 'jump') {
-        return game.emit('jump', { entity: playerEntity });
-    }
-
-    return state;
-});
-```
-
-If you're using any events besides those previously mentioned and you're using TypeScript, make sure you define the event type the handlers can expect to receive when instancing the event emitter:
-
-```ts
-import { Game, GameEvents, EventEmitter } from 'heks';
-import { Entity } from './entities';
-
+// Make sure you declare any event types not already in GameEvents.
 const eventEmitter = new EventEmitter<GameEvents & {
     jump: { entity: Entity }
 }>();
@@ -89,4 +69,18 @@ const Game = new Game(
 	{ width: 320, height: 180 },
 	eventEmitter,
 );
+
+eventEmitter.on('update', (state) => {
+    const playerEntity = findEntity(getEntities(state), { isPlayer: true });
+
+    if (!playerEntity) {
+        return state;
+    }
+
+    if (playerEntity.state === 'jump') {
+        return eventEmitter.emit('jump', { entity: playerEntity });
+    }
+
+    return state;
+});
 ```
