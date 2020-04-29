@@ -1,22 +1,12 @@
-import { Size, GameState } from './types';
+import { Size, GameState, GameEvents } from './types';
 import { start } from './tick.js';
 import { setupGame } from './setupGame.js';
 import EventEmitter from './EventEmitter.js';
 
 interface GameOptions<State> {
-    initialState?: State;
+	initialState?: State;
 	scale?: number;
-    containerSelector?: string;
-}
-
-export interface GameEvents {
-	start: {};
-	beforeUpdate: { time: number };
-	update: { time: number };
-	afterUpdate: { time: number };
-	beforeDraw: { time: number };
-	draw: { time: number; context: CanvasRenderingContext2D; scale: number };
-	afterDraw: { time: number };
+	containerSelector?: string;
 }
 
 export const defaultState: GameState = {
@@ -27,25 +17,25 @@ export const defaultState: GameState = {
 export default class Game<State extends GameState, Events extends GameEvents> {
 	public readonly canvas: HTMLCanvasElement;
 	public readonly context: CanvasRenderingContext2D;
-    public readonly scale: number;
+	public readonly scale: number;
 
 	private state: State;
 	private readonly eventEmitter: EventEmitter<Events>;
 
 	constructor(
-        size: Size,
-        eventEmitter: EventEmitter<Events>,
+		size: Size,
+		eventEmitter: EventEmitter<Events>,
 		{
-            initialState = defaultState as State,
-            scale = 1,
-            containerSelector = 'body'
-        }: GameOptions<State>
+			initialState = defaultState as State,
+			scale = 1,
+			containerSelector = 'body'
+		}: GameOptions<State> = {}
 	) {
-        this.eventEmitter = eventEmitter;
-        const { canvas, context } = setupGame(containerSelector, size, scale);
+		this.eventEmitter = eventEmitter;
+		const { canvas, context } = setupGame(containerSelector, size, scale);
 		this.canvas = canvas;
-        this.context = context;
-        this.scale = scale;
+		this.context = context;
+		this.scale = scale;
 		this.state = {...initialState};
 	}
 
@@ -56,9 +46,9 @@ export default class Game<State extends GameState, Events extends GameEvents> {
 			this.state = this.eventEmitter.emit('beforeUpdate', this.state, { time });
 			this.state = this.eventEmitter.emit('update', this.state, { time });
 			this.state = this.eventEmitter.emit('afterUpdate', this.state, { time });
-			this.state = this.eventEmitter.emit('beforeDraw', this.state, { time });
+			this.state = this.eventEmitter.emit('beforeDraw', this.state, { time, context: this.context, scale: this.scale });
 			this.state = this.eventEmitter.emit('draw', this.state, { time, context: this.context, scale: this.scale });
-			this.state = this.eventEmitter.emit('afterDraw', this.state, { time });
+			this.state = this.eventEmitter.emit('afterDraw', this.state, { time, context: this.context, scale: this.scale });
 		});
 	}
 }
