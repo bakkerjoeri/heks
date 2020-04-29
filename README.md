@@ -22,23 +22,21 @@ const Game = new Game(
 );
 ```
 
- A game takes an event emitter. You can write your own, or use the one provided by Heks.
+A game takes an event emitter. You can write your own, or use the one provided by Heks.
 
- You can also optionally provide a selector for the container the game should mount its canvas in, but by default it will put that in the `body`.
-
-### Concepts
+You can also optionally provide a selector for the container the game should mount its canvas in, but by default it will put that in the `body`.
 
 Heks has two main concepts: **events** and **entities**.
 
-#### Entities
+### Entities
 
 Entities are the game objects, and are described by their components. Through functions like `findEntities`, heks provides you a way to find entities with certain components.
 
-#### Events
+### Events
 
 Events are what makes the Heks game framework tick.
 
-When the game starts, a `start` event is fired. Then, each animation frame, the following events are fired in order:
+When you start your game by calling `game.start()`, a `start` event is fired. Then, each animation frame, the following events are fired in order:
 
 1. `beforeUpdate`
 2. `update`
@@ -52,7 +50,7 @@ Each event calls their subscribed handlers with the current state and some event
 Subscribe to an event using `on`:
 
 ```ts
-game.on('draw', renderGame);
+eventEmitter.on('draw', renderGame);
 ```
 
 You can also emit events:
