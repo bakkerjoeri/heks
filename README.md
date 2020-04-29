@@ -15,7 +15,7 @@ Start by creating a new game:
 import { Game, GameEvents, EventEmitter } from 'heks';
 
 const eventEmitter = new EventEmitter<GameEvents>();
-const Game = new Game(
+const game = new Game(
 	{ width: 320, height: 180 },
 	eventEmitter,
 	{ containerSelector: '#game' },
@@ -53,22 +53,38 @@ Subscribe to an event using `on`:
 eventEmitter.on('draw', renderGame);
 ```
 
-You can also emit events:
+You can also emit events from within other events:
 
 ```ts
-import { getEntities, findEntity } from 'heks';
+import {
+    Game,
+    Entity,
+    getEntities,
+    findEntity,
+    GameState,
+    EventEmitter,
+    GameEvents,
+    UpdateEvent,
+    EventHandlerContext
+} from 'heks';
 
 // Make sure you declare any event types not already in GameEvents.
-const eventEmitter = new EventEmitter<GameEvents & {
-    jump: { entity: Entity }
-}>();
+interface MyGameEvents extends GameEvents {
+    jump: { entity: Entity, time: number }
+}
 
-const Game = new Game(
+const eventEmitter = new EventEmitter<MyGameEvents>();
+
+const game = new Game(
 	{ width: 320, height: 180 },
 	eventEmitter,
 );
 
-eventEmitter.on('update', (state) => {
+const processPlayerState = (
+    state: GameState,
+    { time }: UpdateEvent,
+    { emit }: EventHandlerContext<MyGameEvents>
+): GameState => {
     const playerEntity = findEntity(getEntities(state), { isPlayer: true });
 
     if (!playerEntity) {
@@ -76,9 +92,11 @@ eventEmitter.on('update', (state) => {
     }
 
     if (playerEntity.state === 'jump') {
-        return eventEmitter.emit('jump', { entity: playerEntity });
+        return emit('jump', state, { entity: playerEntity, time, });
     }
 
     return state;
-});
+}
+
+eventEmitter.on('update', processPlayerState);
 ```
