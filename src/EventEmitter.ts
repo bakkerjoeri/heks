@@ -1,14 +1,14 @@
 import arrayWithout from '@bakkerjoeri/array-without';
 import objectWithout from '@bakkerjoeri/object-without';
 
-interface EventHandlerContext<Events> {
+export interface EventHandlerContext<Events> {
     on: EventEmitter<Events>['on'];
     emit: EventEmitter<Events>['emit'];
     remove: EventEmitter<Events>['remove'];
     removeAll: EventEmitter<Events>['on'];
 }
 
-interface EventHandler<State, Event, Events> {
+export interface EventHandler<State, Event, Events> {
     (state: State, event: Event, context: EventHandlerContext<Events>): State;
 }
 
