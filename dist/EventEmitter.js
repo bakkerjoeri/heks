@@ -13,7 +13,7 @@ export default class EventEmitter {
     remove(eventType, handler) {
         this.eventHandlers = Object.assign(Object.assign({}, this.eventHandlers), { [eventType]: arrayWithout(this.eventHandlers[eventType], handler) });
     }
-    removeEventType(eventType) {
+    removeAll(eventType) {
         this.eventHandlers = objectWithout(this.eventHandlers, eventType);
     }
     emit(eventType, initialState, event) {
@@ -22,7 +22,12 @@ export default class EventEmitter {
         }
         const handlers = this.eventHandlers[eventType];
         return handlers.reduce((newState, currentHandler) => {
-            return currentHandler(newState, event);
+            return currentHandler(newState, event, {
+                on: this.on,
+                emit: this.emit,
+                remove: this.remove,
+                removeAll: this.removeAll,
+            });
         }, initialState);
     }
 }

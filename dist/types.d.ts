@@ -16,3 +16,37 @@ export interface GameState {
         [spriteName: string]: Sprite;
     };
 }
+export interface GameEvents {
+    start: StartEvent;
+    beforeUpdate: BeforeUpdateEvent;
+    update: UpdateEvent;
+    afterUpdate: AfterUpdateEvent;
+    beforeDraw: BeforeDrawEvent;
+    draw: DrawEvent;
+    afterDraw: AfterDrawEvent;
+}
+export declare type StartEvent = {};
+export interface BeforeUpdateEvent {
+    time: number;
+}
+export interface UpdateEvent {
+    time: number;
+}
+export interface AfterUpdateEvent {
+    time: number;
+}
+export interface BeforeDrawEvent {
+    time: number;
+    context: CanvasRenderingContext2D;
+    scale: number;
+}
+export interface DrawEvent {
+    time: number;
+    context: CanvasRenderingContext2D;
+    scale: number;
+}
+export interface AfterDrawEvent {
+    time: number;
+    context: CanvasRenderingContext2D;
+    scale: number;
+}
