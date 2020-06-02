@@ -31,6 +31,36 @@ export const addEntity = (components: any) => (state: GameState): GameState => {
 	};
 }
 
+export const createEntityIndex = (...entities: Entity[]): { [entityId: string]: Entity } => {
+	return entities.reduce((entityIndex, entity) => {
+		return {
+			...entityIndex,
+			[entity.id]: entity,
+		}
+	}, {})
+}
+
+export const setEntities = (...entities: Entity[]) => (state: GameState): GameState => {
+	return {
+		...state,
+		entities: {
+			...state.entities,
+			...createEntityIndex(...entities),
+		}
+	};
+}
+
+export const setComponent = (componentName: string) => <
+	ValueType = any
+>(value: ValueType) => <
+    EntityType = Entity
+>(entity: EntityType): EntityType => {
+	return {
+		...entity,
+		[componentName]: value,
+	};
+}
+
 export function getEntity(state: GameState, entityId: string): Entity {
     if (!state.entities.hasOwnProperty(entityId)) {
         throw new Error(`Entity with id ${entityId} doesn't exist.`);

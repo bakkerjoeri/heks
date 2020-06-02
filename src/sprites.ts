@@ -1,5 +1,6 @@
-import { GameState, Position, Size } from './types';
 import { pipe } from '@bakkerjoeri/fp';
+import { setComponent, setEntities, findEntities, getEntities } from './entities';
+import type { GameState, Position, Size } from './types';
 
 export interface SpriteFrame {
     file: string;
@@ -85,4 +86,86 @@ export function getImageForFilePath(filePath: string, cached = true): HTMLImageE
     }
 
 	return image;
+}
+
+export function updateAnimatedSprites(state: GameState, { time }: { time: number }): GameState {
+	const entitiesWithSprites = findEntities(getEntities(state), {
+		sprite: true,
+	});
+
+	const updatedEntities = entitiesWithSprites.map(entity => {
+		const spriteComponent = entity.sprite as SpriteComponent;
+		const spriteOfEntity = getSprite(state, entity.sprite.name);
+
+		if (
+			spriteComponent.framesPerSecond === 0
+			|| spriteOfEntity.frames.length <= 1
+			|| !spriteComponent.isAnimating
+		) {
+			return entity;
+		}
+
+		if (!entity.sprite.animationStartTime) {
+			entity.sprite.animationStartTime = time;
+		}
+
+		const newFrameIndex = calculateNewFrameIndex(
+			spriteOfEntity.frames.length,
+			spriteComponent.framesPerSecond,
+			time - entity.sprite.animationStartTime,
+			spriteComponent.isLooping,
+		);
+
+		return setComponent('sprite')({
+			...spriteComponent,
+			currentFrameIndex: newFrameIndex,
+		})(entity);
+	});
+
+	return setEntities(...updatedEntities)(state);
+}
+
+export function calculateNewFrameIndex(
+	amountOfFrames: number,
+	framesPerSecond: number,
+	elapsedTime: number,
+	isLooping: boolean
+): number {
+	if (isLooping) {
+		return Math.round(elapsedTime / (1000 / framesPerSecond)) % amountOfFrames;
+	}
+
+	return Math.min((Math.round(elapsedTime / 1000) / framesPerSecond), amountOfFrames - 1);
+}
+
+export interface SpriteComponent {
+	name: string;
+	animationStartTime: number | null;
+	currentFrameIndex: number;
+	framesPerSecond: number;
+	isLooping: boolean;
+	isAnimating: boolean;
+}
+
+export interface CreateSpriteOptions {
+	startingFrame?: number;
+	framesPerSecond?: number;
+	isLooping?: boolean;
+	isAnimating?: boolean;
+}
+
+export function createSpriteComponent(name: string, {
+	startingFrame = 0,
+	framesPerSecond = 1,
+	isLooping = true,
+	isAnimating = true
+}: CreateSpriteOptions = {}): SpriteComponent {
+	return {
+		name,
+		animationStartTime: null,
+		currentFrameIndex: startingFrame,
+		framesPerSecond,
+		isLooping,
+		isAnimating,
+	};
 }
