@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@bakkerjoeri/array-without": "^2.0.2",
+    "@bakkerjoeri/fp": "^1.0.0",
     "@bakkerjoeri/object-without": "^1.0.1",
     "@bakkerjoeri/uuid": "^1.0.0"
   }

@@ -1,11 +1,19 @@
 import { GameState, Position, Size } from './types';
+import { pipe } from '@bakkerjoeri/fp';
+
+export interface SpriteFrame {
+    file: string;
+    origin: Position;
+    size: Size;
+}
 
 export interface Sprite {
-	name: string;
-	path: string;
-	size: Size;
-	origin: Position;
+    name: string;
+    frames: SpriteFrame[];
+    offset: Position;
 }
+
+export type SpriteSheet = Sprite[];
 
 export const addSprite = (sprite: Sprite) => (state: GameState): GameState => {
 	return {
@@ -15,6 +23,10 @@ export const addSprite = (sprite: Sprite) => (state: GameState): GameState => {
 			[sprite.name]: sprite,
 		}
 	}
+}
+
+export const importSpriteSheet = (spriteSheet: SpriteSheet) => (state: GameState): GameState => {
+    return pipe(...spriteSheet.map(addSprite))(state);
 }
 
 export function getSprite(state: GameState, name: string): Sprite {
@@ -27,7 +39,6 @@ export function getSprite(state: GameState, name: string): Sprite {
 
 interface DrawOptions {
     scale?: number;
-    offset?: Position;
     flipHorizontal?: boolean;
     flipVertical?: boolean;
 }
@@ -36,15 +47,22 @@ export function drawSprite(
     sprite: Sprite,
     context: CanvasRenderingContext2D,
     position: Position,
-    { scale = 1, offset = {x: 0, y: 0} }: DrawOptions = {}
+    frameIndex = 0,
+    { scale = 1 }: DrawOptions = {}
 ): void {
+    if (!sprite.frames[frameIndex]) {
+        throw new Error(`Sprite ${sprite.name} does not have frame with index ${frameIndex}`);
+    }
+
+    const frame = sprite.frames[frameIndex];
+    const image = getImageForFilePath(frame.file);
 
 	context.drawImage(
-		getImageForFilePath(sprite.path),
-		sprite.origin.x, sprite.origin.y,
-		sprite.size.width, sprite.size.height,
-		(position.x + offset.x) * scale, (position.y + offset.y) * scale,
-		sprite.size.width * scale, sprite.size.height * scale,
+		image,
+		frame.origin.x, frame.origin.y,
+		frame.size.width, frame.size.height,
+		(position.x + sprite.offset.x) * scale, (position.y + sprite.offset.y) * scale,
+		frame.size.width * scale, frame.size.height * scale,
     );
 }
 
@@ -60,6 +78,11 @@ export function getImageForFilePath(filePath: string, cached = true): HTMLImageE
 	const image = new Image();
 	image.src = filePath;
 	imageCache[filePath] = image;
+
+    image.onerror = (): void => {
+        delete imageCache[filePath];
+        throw new Error(`No image found at ${filePath}.`);
+    }
 
 	return image;
 }
