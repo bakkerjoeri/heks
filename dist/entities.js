@@ -3,6 +3,17 @@ export const addEntity = (components) => (state) => {
     const entity = Object.assign({ id: components.id || uuid() }, components);
     return Object.assign(Object.assign({}, state), { entities: Object.assign(Object.assign({}, state.entities), { [entity.id]: entity }) });
 };
+export const createEntityIndex = (...entities) => {
+    return entities.reduce((entityIndex, entity) => {
+        return Object.assign(Object.assign({}, entityIndex), { [entity.id]: entity });
+    }, {});
+};
+export const setEntities = (...entities) => (state) => {
+    return Object.assign(Object.assign({}, state), { entities: Object.assign(Object.assign({}, state.entities), createEntityIndex(...entities)) });
+};
+export const setComponent = (componentName) => (value) => (entity) => {
+    return Object.assign(Object.assign({}, entity), { [componentName]: value });
+};
 export function getEntity(state, entityId) {
     if (!state.entities.hasOwnProperty(entityId)) {
         throw new Error(`Entity with id ${entityId} doesn't exist.`);
