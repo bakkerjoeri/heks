@@ -13,7 +13,14 @@ export interface EventHandler<State, Event, Events> {
 }
 
 export default class EventEmitter<Events> {
-	private eventHandlers: any = {};
+    private eventHandlers: any = {};
+
+    constructor() {
+        this.on = this.on.bind(this);
+        this.emit = this.emit.bind(this);
+        this.remove = this.remove.bind(this);
+        this.removeAll = this.removeAll.bind(this);
+    }
 
     public on<EventType extends keyof Events, State>(
         eventType: EventType,
