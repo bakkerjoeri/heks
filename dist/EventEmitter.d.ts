@@ -9,6 +9,7 @@ export interface EventHandler<State, Event, Events> {
 }
 export default class EventEmitter<Events> {
     private eventHandlers;
+    constructor();
     on<EventType extends keyof Events, State>(eventType: EventType, handler: EventHandler<State, Events[EventType], Events>): void;
     remove<EventType extends keyof Events, State>(eventType: EventType, handler: EventHandler<State, Events[EventType], Events>): void;
     removeAll<EventType extends keyof Events>(eventType: EventType): void;
