@@ -14,7 +14,10 @@ export const defaultState: GameState = {
 	sprites: {},
 };
 
-export default class Game<State extends GameState, Events extends GameEvents> {
+export default class Game<
+    State extends GameState = GameState,
+    Events extends GameEvents = GameEvents
+> {
 	public readonly canvas: HTMLCanvasElement;
 	public readonly context: CanvasRenderingContext2D;
 	public readonly scale: number;

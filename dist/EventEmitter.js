@@ -3,6 +3,10 @@ import objectWithout from '@bakkerjoeri/object-without';
 export default class EventEmitter {
     constructor() {
         this.eventHandlers = {};
+        this.on = this.on.bind(this);
+        this.emit = this.emit.bind(this);
+        this.remove = this.remove.bind(this);
+        this.removeAll = this.removeAll.bind(this);
     }
     on(eventType, handler) {
         this.eventHandlers = Object.assign(Object.assign({}, this.eventHandlers), { [eventType]: [

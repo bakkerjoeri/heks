@@ -16,7 +16,7 @@ export type ComponentFilter = boolean | any | {
 	(value: any): boolean;
 };
 
-export const addEntity = (components: any) => (state: GameState): GameState => {
+export const addEntity = (components: any) => <State extends GameState>(state: State): State => {
 	const entity = {
 		id: components.id || uuid(),
 		...components,
@@ -40,7 +40,7 @@ export const createEntityIndex = (...entities: Entity[]): { [entityId: string]: 
 	}, {})
 }
 
-export const setEntities = (...entities: Entity[]) => (state: GameState): GameState => {
+export const setEntities = (...entities: Entity[]) => <State extends GameState>(state: State): State => {
 	return {
 		...state,
 		entities: {
@@ -61,7 +61,7 @@ export const setComponent = (componentName: string) => <
 	};
 }
 
-export function getEntity(state: GameState, entityId: string): Entity {
+export function getEntity<State extends GameState>(state: State, entityId: string): Entity {
     if (!state.entities.hasOwnProperty(entityId)) {
         throw new Error(`Entity with id ${entityId} doesn't exist.`);
     }
@@ -69,7 +69,7 @@ export function getEntity(state: GameState, entityId: string): Entity {
     return state.entities[entityId];
 }
 
-export function getEntities(state: GameState): Entity[] {
+export function getEntities<State extends GameState>(state: State): Entity[] {
     return Object.values(state.entities).reduce((entities: Entity[], entity: Entity): Entity[] => {
         return [
             ...entities,
