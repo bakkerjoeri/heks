@@ -16,7 +16,7 @@ export interface Sprite {
 
 export type SpriteSheet = Sprite[];
 
-export const addSprite = (sprite: Sprite) => (state: GameState): GameState => {
+export const addSprite = (sprite: Sprite) => <State extends GameState>(state: State): State => {
 	return {
 		...state,
 		sprites: {
@@ -26,11 +26,11 @@ export const addSprite = (sprite: Sprite) => (state: GameState): GameState => {
 	}
 }
 
-export const importSpriteSheet = (spriteSheet: SpriteSheet) => (state: GameState): GameState => {
+export const importSpriteSheet = (spriteSheet: SpriteSheet) => <State extends GameState>(state: State): State => {
     return pipe(...spriteSheet.map(addSprite))(state);
 }
 
-export function getSprite(state: GameState, name: string): Sprite {
+export function getSprite<State extends GameState>(state: State, name: string): Sprite {
 	if (!state.sprites.hasOwnProperty(name)) {
 		throw new Error(`No sprite with name ${name} found.`);
 	}
@@ -88,7 +88,7 @@ export function getImageForFilePath(filePath: string, cached = true): HTMLImageE
 	return image;
 }
 
-export function updateAnimatedSprites(state: GameState, { time }: { time: number }): GameState {
+export function updateAnimatedSprites<State extends GameState>(state: State, { time }: { time: number }): State {
 	const entitiesWithSprites = findEntities(getEntities(state), {
 		sprite: true,
 	});
