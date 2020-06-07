@@ -11,7 +11,7 @@ export function setupGame(
      * First, we mount the game in the container element.
      */
     const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
+    const context = canvas.getContext('2d', { alpha: false });
 
     if (!context) {
         throw new Error('Couldn\'t create context from canvas');
