@@ -10,9 +10,9 @@ export interface Sprite {
     offset: Position;
 }
 export declare type SpriteSheet = Sprite[];
-export declare const addSprite: (sprite: Sprite) => (state: GameState) => GameState;
-export declare const importSpriteSheet: (spriteSheet: SpriteSheet) => (state: GameState) => GameState;
-export declare function getSprite(state: GameState, name: string): Sprite;
+export declare const addSprite: (sprite: Sprite) => <State extends GameState>(state: State) => State;
+export declare const importSpriteSheet: (spriteSheet: SpriteSheet) => <State extends GameState>(state: State) => State;
+export declare function getSprite<State extends GameState>(state: State, name: string): Sprite;
 interface DrawOptions {
     scale?: number;
     flipHorizontal?: boolean;
@@ -20,9 +20,9 @@ interface DrawOptions {
 }
 export declare function drawSprite(sprite: Sprite, context: CanvasRenderingContext2D, position: Position, frameIndex?: number, { scale }?: DrawOptions): void;
 export declare function getImageForFilePath(filePath: string, cached?: boolean): HTMLImageElement;
-export declare function updateAnimatedSprites(state: GameState, { time }: {
+export declare function updateAnimatedSprites<State extends GameState>(state: State, { time }: {
     time: number;
-}): GameState;
+}): State;
 export declare function calculateNewFrameIndex(amountOfFrames: number, framesPerSecond: number, elapsedTime: number, isLooping: boolean): number;
 export interface SpriteComponent {
     name: string;
