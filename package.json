@@ -1,6 +1,6 @@
 {
   "name": "heks",
-  "version": "2.2.2",
+  "version": "2.3.0",
   "description": "A game development framework in TypeScript",
   "repository": "git://github.com/bakkerjoeri/heks.git",
   "author": "Joeri Bakker <bakkerjoeri@gmail.com>",

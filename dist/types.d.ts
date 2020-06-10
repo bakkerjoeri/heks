@@ -38,15 +38,12 @@ export interface AfterUpdateEvent {
 export interface BeforeDrawEvent {
     time: number;
     context: CanvasRenderingContext2D;
-    scale: number;
 }
 export interface DrawEvent {
     time: number;
     context: CanvasRenderingContext2D;
-    scale: number;
 }
 export interface AfterDrawEvent {
     time: number;
     context: CanvasRenderingContext2D;
-    scale: number;
 }
