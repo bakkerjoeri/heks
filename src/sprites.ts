@@ -14,9 +14,7 @@ export interface Sprite {
     offset: Position;
 }
 
-export type SpriteSheet = Sprite[];
-
-export const addSprite = (sprite: Sprite) => <State extends GameState>(state: State): State => {
+export const setSprite = (sprite: Sprite) => <State extends GameState>(state: State): State => {
 	return {
 		...state,
 		sprites: {
@@ -26,8 +24,8 @@ export const addSprite = (sprite: Sprite) => <State extends GameState>(state: St
 	}
 }
 
-export const importSpriteSheet = (spriteSheet: SpriteSheet) => <State extends GameState>(state: State): State => {
-    return pipe(...spriteSheet.map(addSprite))(state);
+export const setSprites = (sprites: Sprite[]) => <State extends GameState>(state: State): State => {
+    return pipe(...sprites.map(setSprite))(state);
 }
 
 export function getSprite<State extends GameState>(state: State, name: string): Sprite {
@@ -38,18 +36,11 @@ export function getSprite<State extends GameState>(state: State, name: string): 
 	return state.sprites[name];
 }
 
-interface DrawOptions {
-    scale?: number;
-    flipHorizontal?: boolean;
-    flipVertical?: boolean;
-}
-
 export function drawSprite(
     sprite: Sprite,
     context: CanvasRenderingContext2D,
     position: Position,
     frameIndex = 0,
-    { scale = 1 }: DrawOptions = {}
 ): void {
     if (!sprite.frames[frameIndex]) {
         throw new Error(`Sprite ${sprite.name} does not have frame with index ${frameIndex}`);
@@ -62,8 +53,8 @@ export function drawSprite(
 		image,
 		frame.origin.x, frame.origin.y,
 		frame.size.width, frame.size.height,
-		(position.x + sprite.offset.x) * scale, (position.y + sprite.offset.y) * scale,
-		frame.size.width * scale, frame.size.height * scale,
+		(position.x + sprite.offset.x), (position.y + sprite.offset.y),
+		frame.size.width, frame.size.height,
     );
 }
 
@@ -147,7 +138,7 @@ export interface SpriteComponent {
 	isAnimating: boolean;
 }
 
-export interface CreateSpriteOptions {
+interface CreateSpriteOptions {
 	startingFrame?: number;
 	framesPerSecond?: number;
 	isLooping?: boolean;
