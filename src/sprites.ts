@@ -36,6 +36,38 @@ export function getSprite<State extends GameState>(state: State, name: string): 
 	return state.sprites[name];
 }
 
+export interface SpriteComponent {
+	name: string;
+	animationStartTime: number | null;
+	currentFrameIndex: number;
+	framesPerSecond: number;
+	isLooping: boolean;
+	isAnimating: boolean;
+}
+
+interface CreateSpriteOptions {
+	startingFrame?: number;
+	framesPerSecond?: number;
+	isLooping?: boolean;
+	isAnimating?: boolean;
+}
+
+export function createSpriteComponent(name: string, {
+	startingFrame = 0,
+	framesPerSecond = 1,
+	isLooping = true,
+	isAnimating = true
+}: CreateSpriteOptions = {}): SpriteComponent {
+	return {
+		name,
+		animationStartTime: null,
+		currentFrameIndex: startingFrame,
+		framesPerSecond,
+		isLooping,
+		isAnimating,
+	};
+}
+
 export function drawSprite(
     sprite: Sprite,
     context: CanvasRenderingContext2D,
@@ -127,36 +159,4 @@ export function calculateNewFrameIndex(
 	}
 
 	return Math.min((Math.round(elapsedTime / 1000) / framesPerSecond), amountOfFrames - 1);
-}
-
-export interface SpriteComponent {
-	name: string;
-	animationStartTime: number | null;
-	currentFrameIndex: number;
-	framesPerSecond: number;
-	isLooping: boolean;
-	isAnimating: boolean;
-}
-
-interface CreateSpriteOptions {
-	startingFrame?: number;
-	framesPerSecond?: number;
-	isLooping?: boolean;
-	isAnimating?: boolean;
-}
-
-export function createSpriteComponent(name: string, {
-	startingFrame = 0,
-	framesPerSecond = 1,
-	isLooping = true,
-	isAnimating = true
-}: CreateSpriteOptions = {}): SpriteComponent {
-	return {
-		name,
-		animationStartTime: null,
-		currentFrameIndex: startingFrame,
-		framesPerSecond,
-		isLooping,
-		isAnimating,
-	};
 }
