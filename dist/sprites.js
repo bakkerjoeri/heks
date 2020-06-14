@@ -1,10 +1,10 @@
 import { pipe } from '@bakkerjoeri/fp';
 import { setComponent, setEntities, findEntities, getEntities } from './entities';
-export const addSprite = (sprite) => (state) => {
+export const setSprite = (sprite) => (state) => {
     return Object.assign(Object.assign({}, state), { sprites: Object.assign(Object.assign({}, state.sprites), { [sprite.name]: sprite }) });
 };
-export const importSpriteSheet = (spriteSheet) => (state) => {
-    return pipe(...spriteSheet.map(addSprite))(state);
+export const setSprites = (sprites) => (state) => {
+    return pipe(...sprites.map(setSprite))(state);
 };
 export function getSprite(state, name) {
     if (!state.sprites.hasOwnProperty(name)) {
@@ -12,13 +12,23 @@ export function getSprite(state, name) {
     }
     return state.sprites[name];
 }
-export function drawSprite(sprite, context, position, frameIndex = 0, { scale = 1 } = {}) {
+export function createSpriteComponent(name, { startingFrame = 0, framesPerSecond = 1, isLooping = true, isAnimating = true } = {}) {
+    return {
+        name,
+        animationStartTime: null,
+        currentFrameIndex: startingFrame,
+        framesPerSecond,
+        isLooping,
+        isAnimating,
+    };
+}
+export function drawSprite(sprite, context, position, frameIndex = 0) {
     if (!sprite.frames[frameIndex]) {
         throw new Error(`Sprite ${sprite.name} does not have frame with index ${frameIndex}`);
     }
     const frame = sprite.frames[frameIndex];
     const image = getImageForFilePath(frame.file);
-    context.drawImage(image, frame.origin.x, frame.origin.y, frame.size.width, frame.size.height, (position.x + sprite.offset.x) * scale, (position.y + sprite.offset.y) * scale, frame.size.width * scale, frame.size.height * scale);
+    context.drawImage(image, frame.origin.x, frame.origin.y, frame.size.width, frame.size.height, (position.x + sprite.offset.x), (position.y + sprite.offset.y), frame.size.width, frame.size.height);
 }
 const imageCache = {};
 export function getImageForFilePath(filePath, cached = true) {
@@ -59,14 +69,4 @@ export function calculateNewFrameIndex(amountOfFrames, framesPerSecond, elapsedT
         return Math.round(elapsedTime / (1000 / framesPerSecond)) % amountOfFrames;
     }
     return Math.min((Math.round(elapsedTime / 1000) / framesPerSecond), amountOfFrames - 1);
-}
-export function createSpriteComponent(name, { startingFrame = 0, framesPerSecond = 1, isLooping = true, isAnimating = true } = {}) {
-    return {
-        name,
-        animationStartTime: null,
-        currentFrameIndex: startingFrame,
-        framesPerSecond,
-        isLooping,
-        isAnimating,
-    };
 }
