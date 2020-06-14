@@ -1,6 +1,6 @@
 import uuid from '@bakkerjoeri/uuid';
 import { GameState } from './types';
-import { WithOptional } from './utilities/WithOptional';
+import { Optional } from './utilities/Optional';
 import { pipe } from '@bakkerjoeri/fp';
 
 export type Component = any;
@@ -21,19 +21,19 @@ export type ComponentFilter = boolean | any | {
 	(value: any): boolean;
 };
 
-export const setEntity = (entity: WithOptional<Entity, 'id'>) => <State extends GameState>(state: State): State => {
-    const id = entity.id || uuid();
+export const setEntity = (entity: Optional<Entity, 'id'>) => <State extends GameState>(state: State): State => {
+	const id = entity.id || uuid();
 
-    return {
-        ...state,
-        entities: {
-            ...state.entities,
-            [id]: {
-                id,
-                ...entity,
-            },
-        },
-    };
+	return {
+		...state,
+		entities: {
+			...state.entities,
+			[id]: {
+				id,
+				...entity,
+			},
+		},
+	};
 }
 
 export const setEntities = (...entities: Entity[]) => <State extends GameState>(state: State): State => {
