@@ -15,8 +15,8 @@ export const defaultState: GameState = {
 };
 
 export default class Game<
-    State extends GameState = GameState,
-    Events extends GameEvents = GameEvents
+	State extends GameState = GameState,
+	Events extends GameEvents = GameEvents
 > {
 	public readonly canvas: HTMLCanvasElement;
 	public readonly context: CanvasRenderingContext2D;

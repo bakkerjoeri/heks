@@ -3,15 +3,15 @@ import { setComponent, setEntities, findEntities, getEntities } from './entities
 import type { GameState, Position, Size } from './types';
 
 export interface SpriteFrame {
-    file: string;
-    origin: Position;
-    size: Size;
+	file: string;
+	origin: Position;
+	size: Size;
 }
 
 export interface Sprite {
-    name: string;
-    frames: SpriteFrame[];
-    offset: Position;
+	name: string;
+	frames: SpriteFrame[];
+	offset: Position;
 }
 
 export const setSprite = (sprite: Sprite) => <State extends GameState>(state: State): State => {
@@ -25,7 +25,7 @@ export const setSprite = (sprite: Sprite) => <State extends GameState>(state: St
 }
 
 export const setSprites = (sprites: Sprite[]) => <State extends GameState>(state: State): State => {
-    return pipe(...sprites.map(setSprite))(state);
+	return pipe(...sprites.map(setSprite))(state);
 }
 
 export function getSprite<State extends GameState>(state: State, name: string): Sprite {
@@ -69,17 +69,17 @@ export function createSpriteComponent(name: string, {
 }
 
 export function drawSprite(
-    sprite: Sprite,
-    context: CanvasRenderingContext2D,
-    position: Position,
-    frameIndex = 0,
+	sprite: Sprite,
+	context: CanvasRenderingContext2D,
+	position: Position,
+	frameIndex = 0,
 ): void {
-    if (!sprite.frames[frameIndex]) {
-        throw new Error(`Sprite ${sprite.name} does not have frame with index ${frameIndex}`);
-    }
+	if (!sprite.frames[frameIndex]) {
+		throw new Error(`Sprite ${sprite.name} does not have frame with index ${frameIndex}`);
+	}
 
-    const frame = sprite.frames[frameIndex];
-    const image = getImageForFilePath(frame.file);
+	const frame = sprite.frames[frameIndex];
+	const image = getImageForFilePath(frame.file);
 
 	context.drawImage(
 		image,
@@ -87,7 +87,7 @@ export function drawSprite(
 		frame.size.width, frame.size.height,
 		(position.x + sprite.offset.x), (position.y + sprite.offset.y),
 		frame.size.width, frame.size.height,
-    );
+	);
 }
 
 const imageCache: {
@@ -103,10 +103,10 @@ export function getImageForFilePath(filePath: string, cached = true): HTMLImageE
 	image.src = filePath;
 	imageCache[filePath] = image;
 
-    image.onerror = (): void => {
-        delete imageCache[filePath];
-        throw new Error(`No image found at ${filePath}.`);
-    }
+	image.onerror = (): void => {
+		delete imageCache[filePath];
+		throw new Error(`No image found at ${filePath}.`);
+	}
 
 	return image;
 }
