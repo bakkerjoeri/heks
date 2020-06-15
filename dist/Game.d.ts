@@ -2,7 +2,6 @@ import { Size, GameState, GameEvents } from './types';
 import EventEmitter from './EventEmitter.js';
 interface GameOptions<State> {
     initialState?: State;
-    scale?: number;
     containerSelector?: string;
 }
 export declare const defaultState: GameState;
