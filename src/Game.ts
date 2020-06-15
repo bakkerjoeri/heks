@@ -5,7 +5,6 @@ import EventEmitter from './EventEmitter.js';
 
 interface GameOptions<State> {
 	initialState?: State;
-	scale?: number;
 	containerSelector?: string;
 }
 
