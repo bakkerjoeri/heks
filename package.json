@@ -7,11 +7,13 @@
   "license": "MIT",
   "main": "dist/index.js",
   "scripts": {
-    "build": "rm -rf dist && tsc",
+    "build": "rm -rf dist && rollup -c",
     "version": "npm run build && git add -A dist",
     "postversion": "git push && git push --tags"
   },
   "devDependencies": {
+    "@rollup/plugin-node-resolve": "^8.4.0",
+    "@rollup/plugin-typescript": "^5.0.2",
     "@types/jest": "^25.2.1",
     "@types/jsdom": "^16.2.1",
     "@typescript-eslint/eslint-plugin": "^2.29.0",
@@ -21,7 +23,9 @@
     "eslint-plugin-import": "^2.20.2",
     "jest": "^25.4.0",
     "jsdom": "^16.2.2",
+    "rollup": "^2.22.1",
     "ts-jest": "^25.4.0",
+    "tslib": "^2.0.0",
     "typescript": "^3.8.3"
   },
   "dependencies": {
