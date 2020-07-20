@@ -1,11 +1,30 @@
 import { Size, GameState, GameEvents } from './types';
 import { start } from './tick.js';
 import { setupGame } from './setupGame.js';
-import EventEmitter from './EventEmitter.js';
+import arrayWithout from '@bakkerjoeri/array-without';
+import objectWithout from '@bakkerjoeri/object-without';
 
 interface GameOptions<State> {
 	initialState?: State;
 	containerSelector?: string;
+}
+
+export interface EventHandlerContext<
+    State extends GameState,
+    Events extends GameEvents
+> {
+	on: Game<State, Events>['on'];
+	emit: Game<State, Events>['emit'];
+	removeEventHandler: Game<State, Events>['removeEventHandler'];
+	removeAllEventHandlers: Game<State, Events>['removeAllEventHandlers'];
+}
+
+export interface EventHandler<
+    State extends GameState,
+    Event,
+    Events extends GameEvents
+> {
+	(state: State, event: Event, context: EventHandlerContext<State, Events>): State;
 }
 
 export const defaultState: GameState = {
@@ -13,7 +32,7 @@ export const defaultState: GameState = {
 	sprites: {},
 };
 
-export default class Game<
+export class Game<
 	State extends GameState = GameState,
 	Events extends GameEvents = GameEvents
 > {
@@ -21,17 +40,15 @@ export default class Game<
 	public readonly context: CanvasRenderingContext2D;
 
 	private state: State;
-	private readonly eventEmitter: EventEmitter<Events>;
+	private eventHandlers: any = {};
 
 	constructor(
 		size: Size,
-		eventEmitter: EventEmitter<Events>,
 		{
 			initialState = defaultState as State,
 			containerSelector = 'body'
 		}: GameOptions<State> = {}
 	) {
-		this.eventEmitter = eventEmitter;
 		const { canvas, context } = setupGame(containerSelector, size);
 		this.canvas = canvas;
 		this.context = context;
@@ -39,15 +56,63 @@ export default class Game<
 	}
 
 	public start(): void {
-		this.state = this.eventEmitter.emit('start', this.state, {});
+		this.state = this.emit('start', this.state, {});
 
 		start((time) => {
-			this.state = this.eventEmitter.emit('beforeUpdate', this.state, { time });
-			this.state = this.eventEmitter.emit('update', this.state, { time });
-			this.state = this.eventEmitter.emit('afterUpdate', this.state, { time });
-			this.state = this.eventEmitter.emit('beforeDraw', this.state, { time, context: this.context });
-			this.state = this.eventEmitter.emit('draw', this.state, { time, context: this.context });
-			this.state = this.eventEmitter.emit('afterDraw', this.state, { time, context: this.context });
+			this.state = this.emit('beforeUpdate', this.state, { time });
+			this.state = this.emit('update', this.state, { time });
+			this.state = this.emit('afterUpdate', this.state, { time });
+			this.state = this.emit('beforeDraw', this.state, { time, context: this.context });
+			this.state = this.emit('draw', this.state, { time, context: this.context });
+			this.state = this.emit('afterDraw', this.state, { time, context: this.context });
 		});
+    }
+
+    public on<EventType extends keyof Events>(
+		eventType: EventType,
+		handler: EventHandler<State, Events[EventType], Events>
+	): void {
+		this.eventHandlers = {
+			...this.eventHandlers,
+			[eventType]: [
+				...this.eventHandlers[eventType] || [],
+				handler,
+			]
+		}
+	}
+
+    public emit<EventType extends keyof Events>(
+		eventType: EventType,
+		currentState: State,
+		event: Events[EventType],
+	): State {
+		if (!this.eventHandlers.hasOwnProperty(eventType)) {
+			return currentState;
+		}
+
+		const handlers = this.eventHandlers[eventType] as EventHandler<State, Events[EventType], Events>[];
+
+		return handlers.reduce((newState: State, currentHandler) => {
+			return currentHandler(newState, event, {
+				on: this.on,
+				emit: this.emit,
+				removeEventHandler: this.removeEventHandler,
+				removeAllEventHandlers: this.removeAllEventHandlers,
+			});
+		}, currentState);
+    }
+
+    public removeEventHandler<EventType extends keyof Events>(
+		eventType: EventType,
+		handler: EventHandler<State, Events[EventType], Events>
+	): void {
+		this.eventHandlers = {
+			...this.eventHandlers,
+			[eventType]: arrayWithout(this.eventHandlers[eventType], handler),
+		};
+	}
+
+	public removeAllEventHandlers<EventType extends keyof Events>(eventType: EventType): void {
+		this.eventHandlers = objectWithout(this.eventHandlers, eventType);
 	}
 }
