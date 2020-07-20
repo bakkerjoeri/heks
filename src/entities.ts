@@ -1,12 +1,11 @@
 import uuid from '@bakkerjoeri/uuid';
 import { GameState } from './types';
-import { Optional } from './utilities/Optional';
 import { pipe } from '@bakkerjoeri/fp';
 
 export type Component = any;
 
 export interface Entity extends Components {
-	id: string;
+	readonly id: string;
 }
 
 export interface Components {
@@ -20,6 +19,8 @@ export interface ComponentFilterMap {
 export type ComponentFilter = boolean | any | {
 	(value: any): boolean;
 };
+
+type Optional<T extends object, K extends keyof T = keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
 export const setEntity = (entity: Optional<Entity, 'id'>) => <State extends GameState>(state: State): State => {
 	const id = entity.id || uuid();
