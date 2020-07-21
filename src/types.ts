@@ -20,16 +20,6 @@ export interface GameState {
 	};
 }
 
-export interface GameEvents {
-	start: StartEvent;
-	beforeUpdate: BeforeUpdateEvent;
-	update: UpdateEvent;
-	afterUpdate: AfterUpdateEvent;
-	beforeDraw: BeforeDrawEvent;
-	draw: DrawEvent;
-	afterDraw: AfterDrawEvent;
-}
-
 export type StartEvent = {}
 export interface BeforeUpdateEvent { time: number }
 export interface UpdateEvent { time: number }
