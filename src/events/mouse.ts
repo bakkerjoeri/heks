@@ -4,49 +4,53 @@ import arrayWithout from '@bakkerjoeri/array-without';
 export type MouseButton = 'left' | 'middle' | 'right' | 'back' | 'forward';
 
 export interface MouseEvents {
-    mousePressed: { button: MouseButton };
-    mouseDown: { button: MouseButton };
-    mouseUp: { button: MouseButton };
+	mouseDown: { button: MouseButton };
+	mousePressed: { button: MouseButton };
+	mouseUp: { button: MouseButton };
 }
 
 const mouseButtonMap: { [mouseButtonIndex: number]: MouseButton} = {
-    0: 'left',
-    1: 'middle',
-    2: 'right',
-    3: 'back',
-    4: 'forward',
+	0: 'left',
+	1: 'middle',
+	2: 'right',
+	3: 'back',
+	4: 'forward',
 }
 
-let mouseButtonsPressed: MouseButton[] = [];
 let mouseButtonsDown: MouseButton[] = [];
+let mouseButtonsPressed: MouseButton[] = [];
 let mouseButtonsUp: MouseButton[] = [];
 
 export function setupMouseEvents(game: Game): void {
-    window.addEventListener('mousedown', (event) => {
-        if (!mouseButtonMap.hasOwnProperty(event.button)) {
-            return;
-        }
+	window.addEventListener('mousedown', (event) => {
+		if (!mouseButtonMap.hasOwnProperty(event.button)) {
+			return;
+		}
 
 		const mouseButton = mouseButtonMap[event.button];
 
-		if (!isMouseButtonPressed(mouseButton) && !isMouseButtonDown(mouseButton)) {
-			mouseButtonsPressed = [...mouseButtonsPressed, mouseButton];
+		console.log('native down', mouseButton);
+
+		if (!isMouseButtonDown(mouseButton) && !isMouseButtonPressed(mouseButton)) {
+			mouseButtonsDown = [...mouseButtonsDown, mouseButton];
 		}
 
-		if (!isMouseButtonDown(mouseButton)) {
-			mouseButtonsDown = [...mouseButtonsDown, mouseButton];
+		if (!isMouseButtonPressed(mouseButton)) {
+			mouseButtonsPressed = [...mouseButtonsPressed, mouseButton];
 		}
 	});
 
 	window.addEventListener('mouseup', (event) => {
-        if (!mouseButtonMap.hasOwnProperty(event.button)) {
-            return;
-        }
+		if (!mouseButtonMap.hasOwnProperty(event.button)) {
+			return;
+		}
 
 		const mouseButton = mouseButtonMap[event.button];
 
-		if (isMouseButtonDown(mouseButton)) {
-			mouseButtonsDown = arrayWithout(mouseButtonsDown, mouseButton);
+		console.log('native up', mouseButton);
+
+		if (isMouseButtonPressed(mouseButton)) {
+			mouseButtonsPressed = arrayWithout(mouseButtonsPressed, mouseButton);
 		}
 
 		if (!isMouseButtonUp(mouseButton)) {
@@ -54,15 +58,15 @@ export function setupMouseEvents(game: Game): void {
 		}
 	});
 
-    window.addEventListener('blur', resetAllMouseButtons);
+	window.addEventListener('blur', resetAllMouseButtons);
 
-    game.on('update', (state, updateEvent, { emit }) => {
-		mouseButtonsPressed.forEach((button) => {
-			state = emit('mousePressed', state, { button });
-		});
-
+	game.on('update', (state, updateEvent, { emit }) => {
 		mouseButtonsDown.forEach((button) => {
 			state = emit('mouseDown', state, { button });
+		});
+
+		mouseButtonsPressed.forEach((button) => {
+			state = emit('mousePressed', state, { button });
 		});
 
 		mouseButtonsUp.forEach((button) => {
@@ -73,7 +77,7 @@ export function setupMouseEvents(game: Game): void {
 	});
 
 	game.on('afterUpdate', (state) => {
-		resetMouseButtonsPressed();
+		resetMouseButtonsDown();
 		resetMouseButtonsUp();
 
 		return state;

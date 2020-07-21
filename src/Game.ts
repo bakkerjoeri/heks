@@ -57,20 +57,20 @@ export class Game<
 			containerSelector = 'body'
 		}: GameOptions<State> = {}
 	) {
-        const { canvas, context } = setupGame(containerSelector, size);
+		const { canvas, context } = setupGame(containerSelector, size);
 		this.canvas = canvas;
-        this.context = context;
-        this.state = {...initialState};
+		this.context = context;
+		this.state = {...initialState};
 
-        this.on = this.on.bind(this);
-        this.emit = this.emit.bind(this);
-        this.removeEventHandler = this.removeEventHandler.bind(this);
-        this.removeAllEventHandlers = this.removeAllEventHandlers.bind(this);
+		this.on = this.on.bind(this);
+		this.emit = this.emit.bind(this);
+		this.removeEventHandler = this.removeEventHandler.bind(this);
+		this.removeAllEventHandlers = this.removeAllEventHandlers.bind(this);
 
-        setupLifecycleEvents(this);
-        setupDrawEvents(this);
-        setupKeyboardEvents(this);
-        setupMouseEvents(this);
+		setupLifecycleEvents(this);
+		setupDrawEvents(this);
+		setupKeyboardEvents(this);
+		setupMouseEvents(this);
 	}
 
 	public start(): void {
@@ -101,7 +101,7 @@ export class Game<
 	): State {
 		if (!this.eventHandlers.hasOwnProperty(eventType)) {
 			return currentState;
-        }
+		}
 
 		const handlers = this.eventHandlers[eventType] as EventHandler<State, Events[EventType], Events>[];
 
