@@ -5,6 +5,7 @@ import objectWithout from '@bakkerjoeri/object-without';
 import { LifecycleEvents, setupLifecycleEvents } from './events/lifecycle';
 import { DrawEvents, setupDrawEvents } from './events/draw';
 import { KeyboardEvents, setupKeyboardEvents } from './events/keyboard.js';
+import { MouseEvents, setupMouseEvents } from './events/mouse.js';
 import type { Size, GameState } from './types';
 
 interface GameOptions<State> {
@@ -17,7 +18,7 @@ export const defaultState: GameState = {
 	sprites: {},
 };
 
-export interface GameEvents extends LifecycleEvents, DrawEvents, KeyboardEvents {
+export interface GameEvents extends LifecycleEvents, DrawEvents, KeyboardEvents, MouseEvents {
 	tick: { time: number };
 }
 
@@ -69,6 +70,7 @@ export class Game<
         setupLifecycleEvents(this);
         setupDrawEvents(this);
         setupKeyboardEvents(this);
+        setupMouseEvents(this);
 	}
 
 	public start(): void {
