@@ -16,15 +16,6 @@ export interface GameState {
         [spriteName: string]: Sprite;
     };
 }
-export interface GameEvents {
-    start: StartEvent;
-    beforeUpdate: BeforeUpdateEvent;
-    update: UpdateEvent;
-    afterUpdate: AfterUpdateEvent;
-    beforeDraw: BeforeDrawEvent;
-    draw: DrawEvent;
-    afterDraw: AfterDrawEvent;
-}
 export declare type StartEvent = {};
 export interface BeforeUpdateEvent {
     time: number;

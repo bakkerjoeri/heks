@@ -1,8 +1,7 @@
 import { GameState } from './types';
-import { Optional } from './utilities/Optional';
 export declare type Component = any;
 export interface Entity extends Components {
-    id: string;
+    readonly id: string;
 }
 export interface Components {
     [componentName: string]: Component;
@@ -13,6 +12,7 @@ export interface ComponentFilterMap {
 export declare type ComponentFilter = boolean | any | {
     (value: any): boolean;
 };
+declare type Optional<T extends object, K extends keyof T = keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 export declare const setEntity: (entity: Optional<Entity, "id">) => <State extends GameState>(state: State) => State;
 export declare const setEntities: (...entities: Entity[]) => <State extends GameState>(state: State) => State;
 export declare const setComponent: (componentName: string) => <ValueType = any>(value: ValueType) => <EntityType = Entity>(entity: EntityType) => EntityType;
@@ -21,3 +21,4 @@ export declare function getEntities<State extends GameState>(state: State): Enti
 export declare const doesEntityMatch: (filters: ComponentFilterMap) => (entity: Entity) => boolean;
 export declare function findEntities(entities: Entity[], filters: ComponentFilterMap): Entity[];
 export declare function findEntity(entities: Entity[], filters: ComponentFilterMap): Entity | undefined;
+export {};
