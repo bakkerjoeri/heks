@@ -61,7 +61,7 @@ game.on('draw', renderGame);
 Each handler is required to return `state`, whether altered or not:
 
 ```ts
-game.on('update', moveBlocks);
+game.on('update', moveEntitiesRight);
 
 function moveEntitiesRight(state) {
 	const updatedEntities = state.entities.map((entity) => {
