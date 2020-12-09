@@ -12,25 +12,30 @@ npm install heks
 Start by creating a new game:
 
 ```ts
-import { Game, GameEvents, EventEmitter } from 'heks';
+import { Game } from 'heks';
 
-const eventEmitter = new EventEmitter<GameEvents>();
 const game = new Game(
 	{ width: 320, height: 180 },
-	eventEmitter,
 	{ containerSelector: '#game' },
 );
 ```
 
-A game takes an event emitter. You can write your own, or use the one provided by Heks.
+You can optionally provide a selector for the container the game should mount its canvas in, but by default it will put that in the `body`.
 
-You can also optionally provide a selector for the container the game should mount its canvas in, but by default it will put that in the `body`.
+### Options
+
+Option | Default
+-|-
+`initialState` | `{ entities: {}, sprites: {} }`
+`containerSelector` | `"body"`
+
+## Concepts
 
 Heks has two main concepts: **events** and **entities**.
 
 ### Entities
 
-Entities are the game objects, and are described by their components. Through functions like `findEntities`, heks provides you a way to find entities with certain components.
+Entities are the game's objects, and are described by their components. Through functions like `findEntities`, heks provides you a way to find entities with certain components.
 
 ### Events
 
@@ -50,7 +55,33 @@ Each event calls their subscribed handlers with the current state and some event
 Subscribe to an event using `on`:
 
 ```ts
-eventEmitter.on('draw', renderGame);
+game.on('draw', renderGame);
+```
+
+Each handler is required to return `state`, whether altered or not:
+
+```ts
+game.on('update', moveEntitiesRight);
+
+function moveEntitiesRight(state) {
+	const updatedEntities = state.entities.map((entity) => {
+		return {
+			...entities,
+			position: {
+				x: entities.position.x + 1,
+				y: entities.position.y,
+			}
+		}
+	});
+
+	return {
+		...state,
+		entities: {
+			...state.entities,
+			updatedEntities,
+		},
+	};
+}
 ```
 
 You can also emit events from within other events:
@@ -69,21 +100,16 @@ import {
 } from 'heks';
 
 // Make sure you declare any event types not already in GameEvents.
-interface MyGameEvents extends GameEvents {
-    jump: { entity: Entity, time: number }
+interface Events extends GameEvents {
+    jump: { entity: Entity, time: number };
 }
 
-const eventEmitter = new EventEmitter<MyGameEvents>();
-
-const game = new Game(
-	{ width: 320, height: 180 },
-	eventEmitter,
-);
+const game = new Game<GameState, Events>({ width: 320, height: 180 });
 
 const processPlayerState = (
     state: GameState,
     { time }: UpdateEvent,
-    { emit }: EventHandlerContext<MyGameEvents>
+    { emit }: EventHandlerContext<Events>
 ): GameState => {
     const playerEntity = findEntity(getEntities(state), { isPlayer: true });
 
@@ -98,5 +124,5 @@ const processPlayerState = (
     return state;
 }
 
-eventEmitter.on('update', processPlayerState);
+game.on('update', processPlayerState);
 ```
