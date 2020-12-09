@@ -7,8 +7,10 @@
   "license": "MIT",
   "main": "dist/index.js",
   "scripts": {
+	"test": "jest",
     "dev": "rm -rf dist && rollup --config rollup.config.js --watch",
-    "build": "rm -rf dist && rollup --config rollup.config.js",
+	"build": "rm -rf dist && rollup --config rollup.config.js",
+	"preversion": "npm run test",
     "version": "npm run build && git add -A dist",
     "postversion": "git push && git push --tags"
   },
