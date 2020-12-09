@@ -1,6 +1,6 @@
 import { Size } from './types.js';
 
-export function setupGame(
+export function setupCanvas(
 	containerSelector: string,
 	size: Size,
 ): {
