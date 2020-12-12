@@ -3,6 +3,7 @@ import { Size } from './types.js';
 export function setupGame(
 	containerSelector: string,
 	size: Size,
+	hideSystemCursor = true
 ): {
 	canvas: HTMLCanvasElement;
 	context: CanvasRenderingContext2D;
@@ -47,6 +48,13 @@ export function setupGame(
 	canvas.style.imageRendering = '-moz-crisp-edges';
 	canvas.style.imageRendering = '-webkit-crisp-edges';
 	canvas.style.imageRendering = 'pixelated';
+
+	/**
+	 * Process option to show or hide system cursor
+	 */
+	if (!hideSystemCursor) {
+		canvas.style.cursor = 'none';
+	}
 
 	return {
 		context,

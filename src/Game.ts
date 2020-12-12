@@ -11,6 +11,7 @@ import type { Size, GameState } from './types';
 interface GameOptions<State> {
 	initialState?: State;
 	containerSelector?: string;
+	showSystemCursor?: boolean;
 }
 
 export const defaultState: GameState = {
@@ -54,10 +55,11 @@ export class Game<
 		size: Size,
 		{
 			initialState = defaultState as State,
-			containerSelector = 'body'
+			containerSelector = 'body',
+			showSystemCursor,
 		}: GameOptions<State> = {}
 	) {
-		const { canvas, context } = setupGame(containerSelector, size);
+		const { canvas, context } = setupGame(containerSelector, size, showSystemCursor);
 		this.canvas = canvas;
 		this.context = context;
 		this.state = {...initialState};
@@ -70,7 +72,7 @@ export class Game<
 		setupLifecycleEvents(this);
 		setupDrawEvents(this);
 		setupKeyboardEvents(this);
-		setupMouseEvents(this);
+		setupMouseEvents(this, this.canvas);
 	}
 
 	public start(): void {

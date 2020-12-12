@@ -2,11 +2,13 @@ import type { Game } from './../Game';
 import arrayWithout from '@bakkerjoeri/array-without';
 
 export type MouseButton = 'left' | 'middle' | 'right' | 'back' | 'forward';
+export type MousePosition = [x: number, y: number];
 
 export interface MouseEvents {
-	mouseDown: { button: MouseButton };
-	mousePressed: { button: MouseButton };
-	mouseUp: { button: MouseButton };
+	mouseMove: { position: MousePosition };
+	mouseDown: { button: MouseButton, position: MousePosition };
+	mousePressed: { button: MouseButton, position: MousePosition };
+	mouseUp: { button: MouseButton, position: MousePosition };
 }
 
 const mouseButtonMap: { [mouseButtonIndex: number]: MouseButton} = {
@@ -20,8 +22,10 @@ const mouseButtonMap: { [mouseButtonIndex: number]: MouseButton} = {
 let mouseButtonsDown: MouseButton[] = [];
 let mouseButtonsPressed: MouseButton[] = [];
 let mouseButtonsUp: MouseButton[] = [];
+let mousePosition: MousePosition = [0, 0];
+let previousMousePosition = mousePosition;
 
-export function setupMouseEvents(game: Game): void {
+export function setupMouseEvents(game: Game, canvas: HTMLCanvasElement): void {
 	window.addEventListener('mousedown', (event) => {
 		if (!mouseButtonMap.hasOwnProperty(event.button)) {
 			return;
@@ -60,23 +64,36 @@ export function setupMouseEvents(game: Game): void {
 
 	window.addEventListener('blur', resetAllMouseButtons);
 
+	window.addEventListener('mousemove', (event) => {
+		const canvasBoundaries = canvas.getBoundingClientRect();
+		const x = Math.round(Math.min(Math.max(event.clientX - canvasBoundaries.left, 0), canvasBoundaries.width));
+		const y = Math.round(Math.min(Math.max(event.clientY - canvasBoundaries.top, 0), canvasBoundaries.height));
+
+		mousePosition = [x, y];
+	});
+
 	game.on('update', (state, updateEvent, { emit }) => {
+		if (mousePosition[0] !== previousMousePosition[0] || mousePosition[1] !== previousMousePosition[1]) {
+			state = emit('mouseMove', state, { position: mousePosition });
+		}
+
 		mouseButtonsDown.forEach((button) => {
-			state = emit('mouseDown', state, { button });
+			state = emit('mouseDown', state, { button, position: mousePosition });
 		});
 
 		mouseButtonsPressed.forEach((button) => {
-			state = emit('mousePressed', state, { button });
+			state = emit('mousePressed', state, { button, position: mousePosition });
 		});
 
 		mouseButtonsUp.forEach((button) => {
-			state = emit('mouseUp', state, { button });
+			state = emit('mouseUp', state, { button, position: mousePosition });
 		});
 
 		return state;
 	});
 
 	game.on('afterUpdate', (state) => {
+		previousMousePosition = mousePosition;
 		resetMouseButtonsDown();
 		resetMouseButtonsUp();
 
