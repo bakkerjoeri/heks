@@ -20,10 +20,3 @@ export interface GameState {
 	};
 }
 
-export type StartEvent = {}
-export interface BeforeUpdateEvent { time: number }
-export interface UpdateEvent { time: number }
-export interface AfterUpdateEvent { time: number }
-export interface BeforeDrawEvent { time: number; context: CanvasRenderingContext2D }
-export interface DrawEvent { time: number; context: CanvasRenderingContext2D }
-export interface AfterDrawEvent { time: number; context: CanvasRenderingContext2D }

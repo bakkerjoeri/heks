@@ -13,87 +13,87 @@ export interface KeyboardEvents {
 	keyUp: KeyboardEvent;
 }
 
-let pressedKeys: Key[] = [];
-let activeKeys: Key[] = [];
-let releasedKeys: Key[] = [];
+let keysPressed: Key[] = [];
+let keysDown: Key[] = [];
+let keysUp: Key[] = [];
 
 export function setupKeyboardEvents(game: Game): void {
 	window.addEventListener('keydown', (event) => {
-		const key = event.key.toLowerCase();
+		const key = event.key;
 
 		if (!isKeyPressed(key) && !isKeyDown(key)) {
-			pressedKeys = [...pressedKeys, key];
+			keysPressed = [...keysPressed, key];
 		}
 
 		if (!isKeyDown(key)) {
-			activeKeys = [...activeKeys, key];
+			keysDown = [...keysDown, key];
 		}
 	});
 
 	window.addEventListener('keyup', (event) => {
-		const key = event.key.toLowerCase();
+		const key = event.key;
 
 		if (isKeyDown(key)) {
-			activeKeys = arrayWithout(activeKeys, key);
+			keysDown = arrayWithout(keysDown, key);
 		}
 
-		if (!isKeyReleased(key)) {
-			releasedKeys = [...releasedKeys, key];
+		if (!isKeyUp(key)) {
+			keysUp = [...keysUp, key];
 		}
 	});
 
 	window.addEventListener('blur', resetAllKeys);
 
 	game.on('update', (state, updateEvent, { emit }) => {
-		pressedKeys.forEach((activeKey) => {
-			state = emit('keyPressed', state, { key: activeKey });
+		keysPressed.forEach((keyPressed) => {
+			state = emit('keyPressed', state, { key: keyPressed });
 		});
 
-		activeKeys.forEach((activeKey) => {
-			state = emit('keyDown', state, { key: activeKey });
+		keysDown.forEach((keyDown) => {
+			state = emit('keyDown', state, { key: keyDown });
 		});
 
-		releasedKeys.forEach((activeKey) => {
-			state = emit('keyUp', state, { key: activeKey });
+		keysUp.forEach((keyUp) => {
+			state = emit('keyUp', state, { key: keyUp });
 		});
 
 		return state;
 	});
 
 	game.on('afterUpdate', (state) => {
-		resetPressedKeys();
-		resetReleasedKeys();
+		resetKeysPressed();
+		resetKeysUp();
 
 		return state;
 	});
 }
 
 function isKeyPressed(key: Key): boolean {
-	return pressedKeys.includes(key);
+	return keysPressed.includes(key);
 }
 
 function isKeyDown(key: Key): boolean {
-	return activeKeys.includes(key);
+	return keysDown.includes(key);
 }
 
-function isKeyReleased(key: Key): boolean {
-	return releasedKeys.includes(key);
+function isKeyUp(key: Key): boolean {
+	return keysUp.includes(key);
 }
 
-function resetPressedKeys(): void {
-	pressedKeys = [];
+function resetKeysPressed(): void {
+	keysPressed = [];
 }
 
-function resetActiveKeys(): void {
-	activeKeys = [];
+function resetKeysDown(): void {
+	keysDown = [];
 }
 
-function resetReleasedKeys(): void {
-	releasedKeys = [];
+function resetKeysUp(): void {
+	keysUp = [];
 }
 
 function resetAllKeys(): void {
-	resetPressedKeys();
-	resetActiveKeys();
-	resetReleasedKeys();
+	resetKeysPressed();
+	resetKeysDown();
+	resetKeysUp();
 }

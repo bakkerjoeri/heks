@@ -3,11 +3,13 @@ import { setupCanvas } from './setupCanvas.js';
 import { LifecycleEvents, setupLifecycleEvents } from './events/lifecycle';
 import { DrawEvents, setupDrawEvents } from './events/draw';
 import { KeyboardEvents, setupKeyboardEvents } from './events/keyboard.js';
+import { MouseEvents, setupMouseEvents } from './events/mouse.js';
 import type { Size, GameState } from './types';
 
 interface GameOptions<State> {
 	initialState?: State;
 	containerSelector?: string;
+	showSystemCursor?: boolean;
 }
 
 export const defaultState: GameState = {
@@ -15,7 +17,7 @@ export const defaultState: GameState = {
 	sprites: {},
 };
 
-export interface GameEvents extends LifecycleEvents, DrawEvents, KeyboardEvents {
+export interface GameEvents extends LifecycleEvents, DrawEvents, KeyboardEvents, MouseEvents {
 	tick: { time: number };
 }
 
@@ -33,17 +35,19 @@ export class Game<
 		size: Size,
 		{
 			initialState = defaultState as State,
-			containerSelector = 'body'
+			containerSelector = 'body',
+			showSystemCursor,
 		}: GameOptions<State> = {}
 	) {
-        const { canvas, context } = setupCanvas(containerSelector, size);
+        const { canvas, context } = setupCanvas(containerSelector, size, showSystemCursor);
 		this.canvas = canvas;
         this.context = context;
         this.state = {...initialState};
 
         setupLifecycleEvents(this);
         setupDrawEvents(this, this.context);
-        setupKeyboardEvents(this);
+		setupKeyboardEvents(this);
+		setupMouseEvents(this, this.canvas);
 	}
 
 	public start(): void {
