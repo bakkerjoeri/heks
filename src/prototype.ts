@@ -72,13 +72,13 @@ export interface EventHandler<State, Event, Events> {
 }
 
 export interface EventHandlerContext<State, Events> {
-	on: EventBus<State, Events>['on'];
-	emit: EventBus<State, Events>['emit'];
-	removeEventHandler: EventBus<State, Events>['removeEventHandler'];
-	removeAllEventHandlers: EventBus<State, Events>['removeAllEventHandlers'];
+	on: EventEmitter<State, Events>['on'];
+	emit: EventEmitter<State, Events>['emit'];
+	removeEventHandler: EventEmitter<State, Events>['removeEventHandler'];
+	removeAllEventHandlers: EventEmitter<State, Events>['removeAllEventHandlers'];
 }
 
-export class EventBus<State, Events> {
+export class EventEmitter<State, Events> {
 	private eventHandlers: any = {};
 
 	public on<EventType extends keyof Events>(
@@ -133,15 +133,15 @@ export class EventBus<State, Events> {
 /**
  * test
  */
-interface MyState {something: 'any'};
+interface MyState {something: 'any'}
 interface MyEvents {
 	tick: { time: number };
 }
 
-const eventBus = new EventBus<MyState, MyEvents>();
+const eventEmitter = new EventEmitter<MyState, MyEvents>();
 
 const gameLoop: GameLoop<MyState> = (state, time): MyState => {
-	return eventBus.emit('tick', state, { time });
+	return eventEmitter.emit('tick', state, { time });
 };
 
 const game = new Game<MyState>({something: 'any'}, gameLoop);
