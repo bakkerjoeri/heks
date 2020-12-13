@@ -1,17 +1,17 @@
 import { pipe } from '@bakkerjoeri/fp';
 import { setComponent, setEntities, findEntities, getEntities } from './entities';
-import type { GameState, Position, Size } from './types';
+import type { GameState } from './types';
 
 export interface SpriteFrame {
 	file: string;
-	origin: Position;
-	size: Size;
+	origin: [x: number, y: number];
+	size: [width: number, height: number];
 }
 
 export interface Sprite {
 	name: string;
 	frames: SpriteFrame[];
-	offset: Position;
+	offset: [left: number, top: number];
 }
 
 export const setSprite = (sprite: Sprite) => <State extends GameState>(state: State): State => {
@@ -71,7 +71,7 @@ export function createSpriteComponent(name: string, {
 export function drawSprite(
 	sprite: Sprite,
 	context: CanvasRenderingContext2D,
-	position: Position,
+	position: [x: number, y: number],
 	frameIndex = 0,
 ): void {
 	if (!sprite.frames[frameIndex]) {
@@ -83,10 +83,10 @@ export function drawSprite(
 
 	context.drawImage(
 		image,
-		frame.origin.x, frame.origin.y,
-		frame.size.width, frame.size.height,
-		(position.x + sprite.offset.x), (position.y + sprite.offset.y),
-		frame.size.width, frame.size.height,
+		frame.origin[0], frame.origin[1],
+		frame.size[0], frame.size[1],
+		(position[0] + sprite.offset[0]), (position[1] + sprite.offset[1]),
+		frame.size[0], frame.size[1],
 	);
 }
 
