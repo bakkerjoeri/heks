@@ -1,5 +1,5 @@
 export class Loop {
-	private isRunning = false;
+	public isRunning = false;
 	private update: (time: number) => any;
 	private rafHandle: number | undefined;
 

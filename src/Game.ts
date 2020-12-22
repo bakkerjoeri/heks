@@ -37,7 +37,7 @@ export class Game<
 	State extends GameState = GameState,
 	Events extends GameEvents = GameEvents
 > {
-	private state: State;
+	public state: State;
 
 	public readonly canvas: HTMLCanvasElement;
 	public readonly context: CanvasRenderingContext2D;
