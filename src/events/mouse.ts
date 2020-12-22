@@ -66,8 +66,16 @@ export function setupMouseEvents(game: Game, canvas: HTMLCanvasElement): void {
 
 	window.addEventListener('mousemove', (event) => {
 		const canvasBoundaries = canvas.getBoundingClientRect();
-		const x = Math.round(Math.min(Math.max(event.clientX - canvasBoundaries.left, 0), canvasBoundaries.width));
-		const y = Math.round(Math.min(Math.max(event.clientY - canvasBoundaries.top, 0), canvasBoundaries.height));
+		const horizontalScale = canvasBoundaries.width / canvas.width;
+		const verticalScale = canvasBoundaries.height / canvas.height;
+
+		const positionInScale = [
+			(event.clientX - canvasBoundaries.left) / horizontalScale,
+			(event.clientY - canvasBoundaries.top) / verticalScale,
+		];
+
+		const x = Math.round(Math.min(Math.max(positionInScale[0], 0), canvas.width));
+		const y = Math.round(Math.min(Math.max(positionInScale[1], 0), canvas.height));
 
 		mousePosition = [x, y];
 	});
