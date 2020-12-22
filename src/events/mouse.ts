@@ -1,4 +1,4 @@
-import { EventEmitter } from './../Events';
+import { EventEmitter } from '../EventEmitter';
 import { UpdateEvents } from './updateAndDraw';
 import arrayWithout from '@bakkerjoeri/array-without';
 

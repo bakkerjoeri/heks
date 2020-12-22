@@ -1,8 +1,6 @@
 import arrayWithout from '@bakkerjoeri/array-without';
 import objectWithout from '@bakkerjoeri/object-without';
 
-export type EventMap = any;
-
 export interface EventHandler<Event, Events, State> {
 	(state: State, event: Event, context: EventHandlerContext<Events, State>): State;
 }
@@ -22,19 +20,6 @@ export class EventEmitter<Events, State> {
 		this.emit = this.emit.bind(this);
 		this.removeEventHandler = this.removeEventHandler.bind(this);
 		this.removeAllEventHandlers = this.removeAllEventHandlers.bind(this);
-	}
-
-	public registerEvents(eventMap: EventMap): void {
-		Object.entries(eventMap).forEach(([eventType, handlerOrHandlers]) => {
-			if (Array.isArray(handlerOrHandlers)) {
-				handlerOrHandlers.forEach(handler => this.on(eventType as keyof Events, handler));
-			} else {
-				this.on(
-					eventType as keyof Events,
-					handlerOrHandlers as EventHandler<Events[keyof Events], Events, State>
-				);
-			}
-		});
 	}
 
 	public on<EventType extends keyof Events>(

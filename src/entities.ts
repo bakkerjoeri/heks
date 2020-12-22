@@ -1,11 +1,16 @@
 import uuid from '@bakkerjoeri/uuid';
-import { GameState } from './types';
 import { pipe } from '@bakkerjoeri/fp';
 
 export type Component = any;
 
 export interface Entity extends Components {
 	readonly id: string;
+}
+
+export interface EntityState {
+	entities: {
+		[entityId: string]: Entity;
+	};
 }
 
 export interface Components {
@@ -20,9 +25,12 @@ export type ComponentFilter = boolean | any | {
 	(value: any): boolean;
 };
 
-type Optional<T extends object, K extends keyof T = keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
+type Optional<
+	T extends Record<string, unknown>,
+	K extends keyof T = keyof T> = Omit<T, K> & Partial<Pick<T, K>
+>;
 
-export const setEntity = (entity: Optional<Entity, 'id'>) => <State extends GameState>(state: State): State => {
+export const setEntity = (entity: Optional<Entity, 'id'>) => <State extends EntityState>(state: State): State => {
 	const id = entity.id || uuid();
 
 	return {
@@ -37,7 +45,7 @@ export const setEntity = (entity: Optional<Entity, 'id'>) => <State extends Game
 	};
 }
 
-export const setEntities = (...entities: Entity[]) => <State extends GameState>(state: State): State => {
+export const setEntities = (...entities: Entity[]) => <State extends EntityState>(state: State): State => {
 	return pipe(...entities.map(setEntity))(state);
 }
 
@@ -48,7 +56,7 @@ export const setComponent = (componentName: string) => <ValueType = any>(value: 
 	};
 }
 
-export function getEntity<State extends GameState>(state: State, entityId: string): Entity {
+export function getEntity<State extends EntityState>(state: State, entityId: string): Entity {
 	if (!state.entities.hasOwnProperty(entityId)) {
 		throw new Error(`Entity with id ${entityId} doesn't exist.`);
 	}
@@ -56,7 +64,7 @@ export function getEntity<State extends GameState>(state: State, entityId: strin
 	return state.entities[entityId];
 }
 
-export function getEntities<State extends GameState>(state: State): Entity[] {
+export function getEntities<State extends EntityState>(state: State): Entity[] {
 	return Object.values(state.entities).reduce((entities: Entity[], entity: Entity): Entity[] => {
 		return [
 			...entities,

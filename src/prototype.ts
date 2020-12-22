@@ -1,149 +1,95 @@
-import arrayWithout from '@bakkerjoeri/array-without';
-import objectWithout from '@bakkerjoeri/object-without';
+import { EventHandler } from './EventEmitter';
+import { MouseMoveEvent } from './events/mouse';
+import { UpdateEvent, DrawEvent } from './events/updateAndDraw';
+import { defaultState, Game, GameEvents, GameState } from './Game';
 
-/**
- * Game
- */
-export interface GameLoop<State>{
-	(state: State, time: number): State;
+interface State extends GameState {
+	player: { position: [x: number, y: number] };
+	mouse: { position: [x: number, y: number] };
 }
 
-export class Game<State> {
-	private isRunning = false;
-	private loop: GameLoop<State>;
-	private rafHandle: number | undefined;
-	private state: State;
+type MyHandler<Event> = EventHandler<Event, GameEvents, State>;
 
-	constructor(
-		initialState: State = {} as State,
-		loop: GameLoop<State> = (state: State): State => state
-	) {
-		this.state = initialState;
-		this.loop = loop;
-	}
-
-	public start(): void {
-		this.isRunning = true;
-		this.scheduleNextTick();
-	}
-
-	public stop(): void {
-		this.isRunning = false;
-
-		if (this.rafHandle) {
-			window.cancelAnimationFrame(this.rafHandle);
-		}
-	}
-
-	public async tick(): Promise<void> {
-		return new Promise(resolve => {
-			this.rafHandle = window.requestAnimationFrame((time) => {
-				this.state = this.loop(this.state, time);
-				resolve();
-			});
-		})
-	}
-
-	private scheduleNextTick(): void {
-		this.rafHandle = window.requestAnimationFrame((time) => {
-			this.tick(time);
-		});
-	}
-}
-
-/**
- * Loop
- */
-export class Loop {
-	private update: () => any;
-
-	constructor(update: Loop['update']) {
-		this.update = update;
-	}
-
-
-}
-
-/**
- * Events
- */
-export interface EventHandler<State, Event, Events> {
-	(state: State, event: Event, context: EventHandlerContext<State, Events>): State;
-}
-
-export interface EventHandlerContext<State, Events> {
-	on: EventEmitter<State, Events>['on'];
-	emit: EventEmitter<State, Events>['emit'];
-	removeEventHandler: EventEmitter<State, Events>['removeEventHandler'];
-	removeAllEventHandlers: EventEmitter<State, Events>['removeAllEventHandlers'];
-}
-
-export class EventEmitter<State, Events> {
-	private eventHandlers: any = {};
-
-	public on<EventType extends keyof Events>(
-		eventType: EventType,
-		handler: EventHandler<State, Events[EventType], Events>
-	): void {
-		this.eventHandlers = {
-			...this.eventHandlers,
-			[eventType]: [
-				...this.eventHandlers[eventType] || [],
-				handler,
-			]
-		}
-	}
-
-	public emit<EventType extends keyof Events>(
-		eventType: EventType,
-		currentState: State,
-		event: Events[EventType],
-	): State {
-		if (!this.eventHandlers.hasOwnProperty(eventType)) {
-			return currentState;
-        }
-
-		const handlers = this.eventHandlers[eventType] as EventHandler<State, Events[EventType], Events>[];
-
-		return handlers.reduce((newState: State, currentHandler) => {
-			return currentHandler(newState, event, {
-				on: this.on,
-				emit: this.emit,
-				removeEventHandler: this.removeEventHandler,
-				removeAllEventHandlers: this.removeAllEventHandlers,
-			});
-		}, currentState);
-	}
-
-	public removeEventHandler<EventType extends keyof Events>(
-		eventType: EventType,
-		handler: EventHandler<State, Events[EventType], Events>
-	): void {
-		this.eventHandlers = {
-			...this.eventHandlers,
-			[eventType]: arrayWithout(this.eventHandlers[eventType], handler),
-		};
-	}
-
-	public removeAllEventHandlers<EventType extends keyof Events>(eventType: EventType): void {
-		this.eventHandlers = objectWithout(this.eventHandlers, eventType);
-	}
-}
-
-/**
- * test
- */
-interface MyState {something: 'any'}
-interface MyEvents {
-	tick: { time: number };
-}
-
-const eventEmitter = new EventEmitter<MyState, MyEvents>();
-
-const gameLoop: GameLoop<MyState> = (state, time): MyState => {
-	return eventEmitter.emit('tick', state, { time });
+let state: State = {
+	...defaultState,
+	player: { position: [180, 60]},
+	mouse: { position: [0, 0]},
 };
 
-const game = new Game<MyState>({something: 'any'}, gameLoop);
+const stateHistory: Array<
+	{ time: number, state: State }
+> = [];
+
+const game = new Game<State>([320, 180], {
+	containerSelector: '.Game',
+	initialState: state,
+	showSystemCursor: false,
+});
+
+const startButton = document.querySelector('[data-hook="startButton"]')!;
+const pauseButton = document.querySelector('[data-hook="pauseButton"]')!;
+const tickButton = document.querySelector('[data-hook="tickButton"]')!;
+const stateHistorySlider = document.querySelector('[data-hook="stateHistorySlider"')! as HTMLInputElement;
+
+const updateMousePosition: MyHandler<MouseMoveEvent> = (state, { position }) => {
+	return {
+		...state,
+		mouse: {
+			...state.mouse,
+			position,
+		},
+	};
+}
+
+const movePlayer: MyHandler<UpdateEvent> = (state) => {
+	return {
+		...state,
+		player: {
+			...state.player,
+			position: [
+				Math.min(320, Math.max(0, state.player.position[0] + Math.round(1 - (Math.random() * 2)))),
+				Math.min(180, Math.max(0, state.player.position[1] + Math.round(1 - (Math.random() * 2)))),
+			],
+		},
+	};
+}
+
+const drawPlayer: MyHandler<DrawEvent> = (state, { context }) => {
+	context.fillStyle = 'red';
+	context.fillRect(state.player.position[0], state.player.position[1], 1, 1);
+
+	return state;
+}
+
+const drawCursor: MyHandler<DrawEvent> = (state, { context }) => {
+	context.fillStyle = 'green';
+	context.fillRect(state.mouse.position[0], state.mouse.position[1], 1, 1);
+
+	return state;
+}
+
+game.eventEmitter.on('tick', (state, { time }) => {
+	stateHistory.push({ time, state });
+	stateHistorySlider.setAttribute('max', (stateHistory.length - 1).toString());
+	stateHistorySlider.value = (stateHistory.length - 1).toString();
+
+	return state;
+});
+
+game.eventEmitter.on('update', movePlayer);
+game.eventEmitter.on('mouseMove', updateMousePosition);
+game.eventEmitter.on('draw', drawPlayer);
+game.eventEmitter.on('draw', drawCursor);
+
+startButton.addEventListener('click', () => game.loop.start());
+pauseButton.addEventListener('click', () => game.loop.stop());
+tickButton.addEventListener('click', () => game.loop.tick());
+
+stateHistorySlider.addEventListener('input', () => {
+	const historyItem = stateHistory[parseInt(stateHistorySlider.value, 10)]
+	state = historyItem.state;
+	game.eventEmitter.emit('beforeDraw', state, { time: historyItem.time, context: game.context, canvas: game.canvas });
+	game.eventEmitter.emit('draw', state, { time: historyItem.time, context: game.context, canvas: game.canvas });
+});
 
 game.start();

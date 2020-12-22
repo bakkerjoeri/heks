@@ -1,4 +1,5 @@
 export class Loop {
+	private isRunning = false;
 	private update: (time: number) => any;
 	private rafHandle: number | undefined;
 
@@ -7,6 +8,11 @@ export class Loop {
 	}
 
 	public start(): void {
+		if (this.isRunning) {
+			return;
+		}
+
+		this.isRunning = true;
 		this.scheduleNextTick();
 	}
 
@@ -14,6 +20,8 @@ export class Loop {
 		if (this.rafHandle) {
 			window.cancelAnimationFrame(this.rafHandle);
 		}
+
+		this.isRunning = false;
 	}
 
 	public async tick(): Promise<void> {
@@ -26,6 +34,10 @@ export class Loop {
 	}
 
 	private async scheduleNextTick(): Promise<void> {
+		if (!this.isRunning) {
+			return;
+		}
+
 		await this.tick();
 		this.scheduleNextTick();
 	}
