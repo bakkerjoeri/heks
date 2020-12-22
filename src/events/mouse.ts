@@ -1,14 +1,18 @@
-import type { Game } from './../Game';
+import { EventEmitter } from '../EventEmitter';
+import { UpdateEvents } from './updateAndDraw';
 import arrayWithout from '@bakkerjoeri/array-without';
 
 export type MouseButton = 'left' | 'middle' | 'right' | 'back' | 'forward';
 export type MousePosition = [x: number, y: number];
 
+export interface MouseMoveEvent { position: MousePosition }
+export interface MouseButtonEvent { button: MouseButton, position: MousePosition }
+
 export interface MouseEvents {
-	mouseMove: { position: MousePosition };
-	mouseDown: { button: MouseButton, position: MousePosition };
-	mousePressed: { button: MouseButton, position: MousePosition };
-	mouseUp: { button: MouseButton, position: MousePosition };
+	mouseMove: MouseMoveEvent;
+	mouseDown: MouseButtonEvent;
+	mousePressed: MouseButtonEvent;
+	mouseUp: MouseButtonEvent;
 }
 
 const mouseButtonMap: { [mouseButtonIndex: number]: MouseButton} = {
@@ -25,15 +29,19 @@ let mouseButtonsUp: MouseButton[] = [];
 let mousePosition: MousePosition = [0, 0];
 let previousMousePosition = mousePosition;
 
-export function setupMouseEvents(game: Game, canvas: HTMLCanvasElement): void {
+export function setupMouseEvents<
+	Events extends MouseEvents & UpdateEvents,
+	State
+>(
+	eventEmitter: EventEmitter<Events, State>,
+	canvas: HTMLCanvasElement
+): void {
 	window.addEventListener('mousedown', (event) => {
 		if (!mouseButtonMap.hasOwnProperty(event.button)) {
 			return;
 		}
 
 		const mouseButton = mouseButtonMap[event.button];
-
-		console.log('native down', mouseButton);
 
 		if (!isMouseButtonDown(mouseButton) && !isMouseButtonPressed(mouseButton)) {
 			mouseButtonsDown = [...mouseButtonsDown, mouseButton];
@@ -51,8 +59,6 @@ export function setupMouseEvents(game: Game, canvas: HTMLCanvasElement): void {
 
 		const mouseButton = mouseButtonMap[event.button];
 
-		console.log('native up', mouseButton);
-
 		if (isMouseButtonPressed(mouseButton)) {
 			mouseButtonsPressed = arrayWithout(mouseButtonsPressed, mouseButton);
 		}
@@ -66,13 +72,21 @@ export function setupMouseEvents(game: Game, canvas: HTMLCanvasElement): void {
 
 	window.addEventListener('mousemove', (event) => {
 		const canvasBoundaries = canvas.getBoundingClientRect();
-		const x = Math.round(Math.min(Math.max(event.clientX - canvasBoundaries.left, 0), canvasBoundaries.width));
-		const y = Math.round(Math.min(Math.max(event.clientY - canvasBoundaries.top, 0), canvasBoundaries.height));
+		const horizontalScale = canvasBoundaries.width / canvas.width;
+		const verticalScale = canvasBoundaries.height / canvas.height;
+
+		const positionInScale = [
+			(event.clientX - canvasBoundaries.left) / horizontalScale,
+			(event.clientY - canvasBoundaries.top) / verticalScale,
+		];
+
+		const x = Math.round(Math.min(Math.max(positionInScale[0], 0), canvas.width));
+		const y = Math.round(Math.min(Math.max(positionInScale[1], 0), canvas.height));
 
 		mousePosition = [x, y];
 	});
 
-	game.on('update', (state, updateEvent, { emit }) => {
+	eventEmitter.on('update', (state, updateEvent, { emit }) => {
 		if (mousePosition[0] !== previousMousePosition[0] || mousePosition[1] !== previousMousePosition[1]) {
 			state = emit('mouseMove', state, { position: mousePosition });
 		}
@@ -92,7 +106,7 @@ export function setupMouseEvents(game: Game, canvas: HTMLCanvasElement): void {
 		return state;
 	});
 
-	game.on('afterUpdate', (state) => {
+	eventEmitter.on('afterUpdate', (state) => {
 		previousMousePosition = mousePosition;
 		resetMouseButtonsDown();
 		resetMouseButtonsUp();

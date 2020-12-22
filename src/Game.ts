@@ -1,133 +1,81 @@
-import { start } from './tick.js';
-import { setupGame } from './setupGame.js';
-import arrayWithout from '@bakkerjoeri/array-without';
-import objectWithout from '@bakkerjoeri/object-without';
-import { LifecycleEvents, setupLifecycleEvents } from './events/lifecycle';
-import { DrawEvents, setupDrawEvents } from './events/draw';
-import { KeyboardEvents, setupKeyboardEvents } from './events/keyboard.js';
-import { MouseEvents, setupMouseEvents } from './events/mouse.js';
-import type { Size, GameState } from './types';
+import { clearCanvas, setupCanvas } from './canvas.js';
+import { EventEmitter } from './EventEmitter.js';
+import { Loop } from './Loop.js';
+import { setupUpdateAndDrawEvents } from './events/updateAndDraw.js';
+import { setupKeyboardEvents } from './events/keyboard.js';
+import { setupMouseEvents } from './events/mouse.js';
+
+import type { EntityState } from './entities.js';
+import type { SpriteState } from './sprites.js';
+import type { UpdateEvents, DrawEvents } from './events/updateAndDraw.js';
+import type { KeyboardEvents } from './events/keyboard.js';
+import type { MouseEvents } from './events/mouse.js';
 
 interface GameOptions<State> {
-	initialState?: State;
+	backgroundColor?: string;
 	containerSelector?: string;
+	initialState?: State;
 	showSystemCursor?: boolean;
 }
+
+export interface TickEvent { time: number }
+
+export interface LifeCycleEvents {
+	start: Record<string, never>;
+	tick: TickEvent;
+}
+
+export interface GameState extends EntityState, SpriteState {}
+export interface GameEvents extends LifeCycleEvents, UpdateEvents, DrawEvents, KeyboardEvents, MouseEvents {}
 
 export const defaultState: GameState = {
 	entities: {},
 	sprites: {},
 };
 
-export interface GameEvents extends LifecycleEvents, DrawEvents, KeyboardEvents, MouseEvents {
-	tick: { time: number };
-}
-
-export interface EventHandler<
-	State extends GameState,
-	Event,
-	Events extends GameEvents
-> {
-	(state: State, event: Event, context: EventHandlerContext<State, Events>): State;
-}
-
-export interface EventHandlerContext<
-	State extends GameState,
-	Events extends GameEvents
-> {
-	on: Game<State, Events>['on'];
-	emit: Game<State, Events>['emit'];
-	removeEventHandler: Game<State, Events>['removeEventHandler'];
-	removeAllEventHandlers: Game<State, Events>['removeAllEventHandlers'];
-}
-
 export class Game<
 	State extends GameState = GameState,
 	Events extends GameEvents = GameEvents
 > {
+	private state: State;
+
 	public readonly canvas: HTMLCanvasElement;
 	public readonly context: CanvasRenderingContext2D;
-
-	private state: State;
-	private eventHandlers: any = {};
+	public readonly eventEmitter: EventEmitter<Events, State>;
+	public readonly loop: Loop;
 
 	constructor(
-		size: Size,
+		size: [width: number, height: number],
 		{
-			initialState = defaultState as State,
+			backgroundColor,
 			containerSelector = 'body',
+			initialState = defaultState as State,
 			showSystemCursor,
 		}: GameOptions<State> = {}
 	) {
-		const { canvas, context } = setupGame(containerSelector, size, showSystemCursor);
+		const { canvas, context } = setupCanvas(containerSelector, size, showSystemCursor);
 		this.canvas = canvas;
 		this.context = context;
 		this.state = {...initialState};
+		this.eventEmitter = new EventEmitter<Events, State>();
+		this.loop = new Loop(this.loopCallback.bind(this));
 
-		this.on = this.on.bind(this);
-		this.emit = this.emit.bind(this);
-		this.removeEventHandler = this.removeEventHandler.bind(this);
-		this.removeAllEventHandlers = this.removeAllEventHandlers.bind(this);
+		setupUpdateAndDrawEvents(this.eventEmitter, this.canvas, this.context);
+		setupKeyboardEvents(this.eventEmitter);
+		setupMouseEvents(this.eventEmitter, this.canvas);
 
-		setupLifecycleEvents(this);
-		setupDrawEvents(this);
-		setupKeyboardEvents(this);
-		setupMouseEvents(this, this.canvas);
-	}
-
-	public start(): void {
-		this.state = this.emit('start', this.state, {});
-
-		start((time) => {
-			this.state = this.emit('tick', this.state, { time });
+		this.eventEmitter.on('beforeDraw', (state, { canvas, context }) => {
+			clearCanvas(canvas, context, backgroundColor);
+			return state;
 		});
 	}
 
-	public on<EventType extends keyof Events>(
-		eventType: EventType,
-		handler: EventHandler<State, Events[EventType], Events>
-	): void {
-		this.eventHandlers = {
-			...this.eventHandlers,
-			[eventType]: [
-				...this.eventHandlers[eventType] || [],
-				handler,
-			]
-		}
+	public start(): void {
+		this.state = this.eventEmitter.emit('start', this.state, {});
+		this.loop.start();
 	}
 
-	public emit<EventType extends keyof Events>(
-		eventType: EventType,
-		currentState: State,
-		event: Events[EventType],
-	): State {
-		if (!this.eventHandlers.hasOwnProperty(eventType)) {
-			return currentState;
-		}
-
-		const handlers = this.eventHandlers[eventType] as EventHandler<State, Events[EventType], Events>[];
-
-		return handlers.reduce((newState: State, currentHandler) => {
-			return currentHandler(newState, event, {
-				on: this.on,
-				emit: this.emit,
-				removeEventHandler: this.removeEventHandler,
-				removeAllEventHandlers: this.removeAllEventHandlers,
-			});
-		}, currentState);
-	}
-
-	public removeEventHandler<EventType extends keyof Events>(
-		eventType: EventType,
-		handler: EventHandler<State, Events[EventType], Events>
-	): void {
-		this.eventHandlers = {
-			...this.eventHandlers,
-			[eventType]: arrayWithout(this.eventHandlers[eventType], handler),
-		};
-	}
-
-	public removeAllEventHandlers<EventType extends keyof Events>(eventType: EventType): void {
-		this.eventHandlers = objectWithout(this.eventHandlers, eventType);
+	private loopCallback(time: number) {
+		this.state = this.eventEmitter.emit('tick', this.state, { time });
 	}
 }

@@ -1,6 +1,6 @@
 import { pipe } from '@bakkerjoeri/fp';
-import { setComponent, setEntities, findEntities, getEntities } from './entities';
-import type { GameState } from './types';
+import { setComponent, setEntities, findEntities, getEntities } from './entities.js';
+import type { EntityState } from './entities.js';
 
 export interface SpriteFrame {
 	file: string;
@@ -14,7 +14,13 @@ export interface Sprite {
 	offset: [left: number, top: number];
 }
 
-export const setSprite = (sprite: Sprite) => <State extends GameState>(state: State): State => {
+export interface SpriteState {
+	sprites: {
+		[spriteName: string]: Sprite;
+	};
+}
+
+export const setSprite = (sprite: Sprite) => <State extends SpriteState>(state: State): State => {
 	return {
 		...state,
 		sprites: {
@@ -24,11 +30,11 @@ export const setSprite = (sprite: Sprite) => <State extends GameState>(state: St
 	}
 }
 
-export const setSprites = (sprites: Sprite[]) => <State extends GameState>(state: State): State => {
+export const setSprites = (sprites: Sprite[]) => <State extends SpriteState>(state: State): State => {
 	return pipe(...sprites.map(setSprite))(state);
 }
 
-export function getSprite<State extends GameState>(state: State, name: string): Sprite {
+export function getSprite<State extends SpriteState>(state: State, name: string): Sprite {
 	if (!state.sprites.hasOwnProperty(name)) {
 		throw new Error(`No sprite with name ${name} found.`);
 	}
@@ -111,7 +117,9 @@ export function getImageForFilePath(filePath: string, cached = true): HTMLImageE
 	return image;
 }
 
-export function updateAnimatedSprites<State extends GameState>(state: State, { time }: { time: number }): State {
+export function updateAnimatedSprites<
+	State extends SpriteState & EntityState
+>(state: State, { time }: { time: number }): State {
 	const entitiesWithSprites = findEntities(getEntities(state), {
 		sprite: true,
 	});
