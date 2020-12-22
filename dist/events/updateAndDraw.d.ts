@@ -1,4 +1,5 @@
-import { EventEmitter } from '../EventEmitter';
+import type { EventEmitter } from '../EventEmitter.js';
+import type { LifeCycleEvents } from '../Game.js';
 export interface UpdateEvents {
     beforeUpdate: BeforeUpdateEvent;
     update: UpdateEvent;
@@ -33,4 +34,4 @@ export interface AfterDrawEvent {
     context: CanvasRenderingContext2D;
     canvas: HTMLCanvasElement;
 }
-export declare function setupUpdateAndDrawEvents<Events extends UpdateEvents & DrawEvents, State>(eventEmitter: EventEmitter<Events, State>, canvas: HTMLCanvasElement, context: CanvasRenderingContext2D): void;
+export declare function setupUpdateAndDrawEvents<Events extends LifeCycleEvents & UpdateEvents & DrawEvents, State>(eventEmitter: EventEmitter<Events, State>, canvas: HTMLCanvasElement, context: CanvasRenderingContext2D): void;
