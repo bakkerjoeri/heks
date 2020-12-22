@@ -1,5 +1,6 @@
-import type { Game } from './../Game';
 import arrayWithout from '@bakkerjoeri/array-without';
+import { EventEmitter } from '../Events';
+import { UpdateEvents } from './updateAndDraw';
 
 export type Key = string;
 
@@ -17,7 +18,10 @@ let keysPressed: Key[] = [];
 let keysDown: Key[] = [];
 let keysUp: Key[] = [];
 
-export function setupKeyboardEvents(game: Game): void {
+export function setupKeyboardEvents<
+	Events extends KeyboardEvents & UpdateEvents,
+	State
+>(eventEmitter: EventEmitter<Events, State>,): void {
 	window.addEventListener('keydown', (event) => {
 		const key = event.key;
 
@@ -44,7 +48,7 @@ export function setupKeyboardEvents(game: Game): void {
 
 	window.addEventListener('blur', resetAllKeys);
 
-	game.on('update', (state, updateEvent, { emit }) => {
+	eventEmitter.on('update', (state, updateEvent, { emit }) => {
 		keysPressed.forEach((keyPressed) => {
 			state = emit('keyPressed', state, { key: keyPressed });
 		});
@@ -60,7 +64,7 @@ export function setupKeyboardEvents(game: Game): void {
 		return state;
 	});
 
-	game.on('afterUpdate', (state) => {
+	eventEmitter.on('afterUpdate', (state) => {
 		resetKeysPressed();
 		resetKeysUp();
 

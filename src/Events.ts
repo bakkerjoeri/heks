@@ -1,11 +1,13 @@
 import arrayWithout from '@bakkerjoeri/array-without';
 import objectWithout from '@bakkerjoeri/object-without';
 
-export interface EventHandler<State, Event, Events> {
-	(state: State, event: Event, context: EventHandlerContext<State, Events>): State;
+export type EventMap = any;
+
+export interface EventHandler<Event, Events, State> {
+	(state: State, event: Event, context: EventHandlerContext<Events, State>): State;
 }
 
-export interface EventHandlerContext<State, Events> {
+export interface EventHandlerContext<Events, State> {
 	on: EventEmitter<Events, State>['on'];
 	emit: EventEmitter<Events, State>['emit'];
 	removeEventHandler: EventEmitter<Events, State>['removeEventHandler'];
@@ -13,11 +15,31 @@ export interface EventHandlerContext<State, Events> {
 }
 
 export class EventEmitter<Events, State> {
-	private eventHandlers: any;
+	private eventHandlers: any = {};
+
+	public constructor() {
+		this.on = this.on.bind(this);
+		this.emit = this.emit.bind(this);
+		this.removeEventHandler = this.removeEventHandler.bind(this);
+		this.removeAllEventHandlers = this.removeAllEventHandlers.bind(this);
+	}
+
+	public registerEvents(eventMap: EventMap): void {
+		Object.entries(eventMap).forEach(([eventType, handlerOrHandlers]) => {
+			if (Array.isArray(handlerOrHandlers)) {
+				handlerOrHandlers.forEach(handler => this.on(eventType as keyof Events, handler));
+			} else {
+				this.on(
+					eventType as keyof Events,
+					handlerOrHandlers as EventHandler<Events[keyof Events], Events, State>
+				);
+			}
+		});
+	}
 
 	public on<EventType extends keyof Events>(
 		eventType: EventType,
-		handler: EventHandler<State, Events[EventType], Events>
+		handler: EventHandler<Events[EventType], Events, State>
 	): void {
 		this.eventHandlers = {
 			...this.eventHandlers,
@@ -37,7 +59,7 @@ export class EventEmitter<Events, State> {
 			return currentState;
         }
 
-		const handlers = this.eventHandlers[eventType] as EventHandler<State, Events[EventType], Events>[];
+		const handlers = this.eventHandlers[eventType] as EventHandler<Events[EventType], Events, State>[];
 
 		return handlers.reduce((newState: State, currentHandler) => {
 			return currentHandler(newState, event, {
@@ -51,7 +73,7 @@ export class EventEmitter<Events, State> {
 
 	public removeEventHandler<EventType extends keyof Events>(
 		eventType: EventType,
-		handler: EventHandler<State, Events[EventType], Events>
+		handler: EventHandler<Events[EventType], Events, State>
 	): void {
 		this.eventHandlers = {
 			...this.eventHandlers,

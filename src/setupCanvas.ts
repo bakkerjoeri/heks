@@ -1,8 +1,6 @@
-import { Size } from './types.js';
-
 export function setupCanvas(
 	containerSelector: string,
-	size: Size,
+	size: [width: number, height: number],
 	hideSystemCursor = true
 ): {
 	canvas: HTMLCanvasElement;
@@ -30,8 +28,8 @@ export function setupCanvas(
 	 * We give the canvas the user defined pixel size through element attributes,
 	 * but make sure it fills it's container through CSS.
 	 */
-	canvas.setAttribute('width', (size.width).toString());
-	canvas.setAttribute('height', (size.height).toString());
+	canvas.setAttribute('width', (size[0]).toString());
+	canvas.setAttribute('height', (size[1]).toString());
 	canvas.style.width = '100%';
 	canvas.style.height = '100%';
 	canvas.style.objectFit = 'contain';

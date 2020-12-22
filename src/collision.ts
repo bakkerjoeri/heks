@@ -9,6 +9,7 @@ export function isPointInPoint(a: Vector2D, b: Vector2D): boolean {
 /*
  * Figuring out rectangles in my head gives me a head ache, so it's comment time.
  * When given rectangle r = [[left, top], [right, bottom]], this is how you find each corner:
+ *
  * top 		=> r[0][1]
  * right 	=> r[1][0]
  * bottom 	=> r[1][1]
