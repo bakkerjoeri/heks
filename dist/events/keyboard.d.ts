@@ -1,4 +1,5 @@
-import type { Game } from './../Game';
+import { EventEmitter } from '../EventEmitter';
+import { UpdateEvents } from './updateAndDraw';
 export declare type Key = string;
 export interface KeyboardEvent {
     key: Key;
@@ -8,4 +9,4 @@ export interface KeyboardEvents {
     keyDown: KeyboardEvent;
     keyUp: KeyboardEvent;
 }
-export declare function setupKeyboardEvents(game: Game): void;
+export declare function setupKeyboardEvents<Events extends KeyboardEvents & UpdateEvents, State>(eventEmitter: EventEmitter<Events, State>): void;

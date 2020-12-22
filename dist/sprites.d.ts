@@ -1,17 +1,22 @@
-import type { GameState, Position, Size } from './types';
+import type { EntityState } from './entities.js';
 export interface SpriteFrame {
     file: string;
-    origin: Position;
-    size: Size;
+    origin: [x: number, y: number];
+    size: [width: number, height: number];
 }
 export interface Sprite {
     name: string;
     frames: SpriteFrame[];
-    offset: Position;
+    offset: [left: number, top: number];
 }
-export declare const setSprite: (sprite: Sprite) => <State extends GameState>(state: State) => State;
-export declare const setSprites: (sprites: Sprite[]) => <State extends GameState>(state: State) => State;
-export declare function getSprite<State extends GameState>(state: State, name: string): Sprite;
+export interface SpriteState {
+    sprites: {
+        [spriteName: string]: Sprite;
+    };
+}
+export declare const setSprite: (sprite: Sprite) => <State extends SpriteState>(state: State) => State;
+export declare const setSprites: (sprites: Sprite[]) => <State extends SpriteState>(state: State) => State;
+export declare function getSprite<State extends SpriteState>(state: State, name: string): Sprite;
 export interface SpriteComponent {
     name: string;
     animationStartTime: number | null;
@@ -27,9 +32,9 @@ interface CreateSpriteOptions {
     isAnimating?: boolean;
 }
 export declare function createSpriteComponent(name: string, { startingFrame, framesPerSecond, isLooping, isAnimating }?: CreateSpriteOptions): SpriteComponent;
-export declare function drawSprite(sprite: Sprite, context: CanvasRenderingContext2D, position: Position, frameIndex?: number): void;
+export declare function drawSprite(sprite: Sprite, context: CanvasRenderingContext2D, position: [x: number, y: number], frameIndex?: number): void;
 export declare function getImageForFilePath(filePath: string, cached?: boolean): HTMLImageElement;
-export declare function updateAnimatedSprites<State extends GameState>(state: State, { time }: {
+export declare function updateAnimatedSprites<State extends SpriteState & EntityState>(state: State, { time }: {
     time: number;
 }): State;
 export declare function calculateNewFrameIndex(amountOfFrames: number, framesPerSecond: number, elapsedTime: number, isLooping: boolean): number;

@@ -1,17 +1,4 @@
-function start(callback) {
-    scheduleNextTick(callback);
-}
-function scheduleNextTick(callback) {
-    window.requestAnimationFrame((time) => {
-        tick(callback, time);
-    });
-}
-function tick(callback, time) {
-    callback(time);
-    scheduleNextTick(callback);
-}
-
-function setupGame(containerSelector, size) {
+function setupCanvas(containerSelector, size, hideSystemCursor = true) {
     /**
      * First, we mount the game in the container element.
      */
@@ -29,8 +16,8 @@ function setupGame(containerSelector, size) {
      * We give the canvas the user defined pixel size through element attributes,
      * but make sure it fills it's container through CSS.
      */
-    canvas.setAttribute('width', (size.width).toString());
-    canvas.setAttribute('height', (size.height).toString());
+    canvas.setAttribute('width', (size[0]).toString());
+    canvas.setAttribute('height', (size[1]).toString());
     canvas.style.width = '100%';
     canvas.style.height = '100%';
     canvas.style.objectFit = 'contain';
@@ -45,10 +32,21 @@ function setupGame(containerSelector, size) {
     canvas.style.imageRendering = '-moz-crisp-edges';
     canvas.style.imageRendering = '-webkit-crisp-edges';
     canvas.style.imageRendering = 'pixelated';
+    /**
+     * Process option to show or hide system cursor
+     */
+    if (!hideSystemCursor) {
+        canvas.style.cursor = 'none';
+    }
     return {
         context,
         canvas,
     };
+}
+function clearCanvas(canvas, context, backgroundColor = '#000000') {
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.fillStyle = backgroundColor;
+    context.fillRect(0, 0, canvas.width, canvas.height);
 }
 
 function arrayWithout(array, ...valuesToExclude) {
@@ -67,113 +65,13 @@ function objectWithout(object, ...keysToRemove) {
     }, {});
 }
 
-function setupLifecycleEvents(game) {
-    game.on('tick', (state, { time }, { emit }) => {
-        state = emit('beforeUpdate', state, { time });
-        state = emit('update', state, { time });
-        state = emit('afterUpdate', state, { time });
-        return state;
-    });
-}
-
-function setupDrawEvents(game) {
-    game.on('tick', (state, { time }, { emit }) => {
-        state = emit('beforeDraw', state, { time, context: game.context });
-        state = emit('draw', state, { time, context: game.context });
-        state = emit('afterDraw', state, { time, context: game.context });
-        return state;
-    });
-}
-
-let pressedKeys = [];
-let activeKeys = [];
-let releasedKeys = [];
-function setupKeyboardEvents(game) {
-    window.addEventListener('keydown', (event) => {
-        const key = event.key.toLowerCase();
-        if (!isKeyPressed(key) && !isKeyDown(key)) {
-            pressedKeys = [...pressedKeys, key];
-        }
-        if (!isKeyDown(key)) {
-            activeKeys = [...activeKeys, key];
-        }
-    });
-    window.addEventListener('keyup', (event) => {
-        const key = event.key.toLowerCase();
-        if (isKeyDown(key)) {
-            activeKeys = arrayWithout(activeKeys, key);
-        }
-        if (!isKeyReleased(key)) {
-            releasedKeys = [...releasedKeys, key];
-        }
-    });
-    window.addEventListener('blur', resetAllKeys);
-    game.on('update', (state, updateEvent, { emit }) => {
-        pressedKeys.forEach((activeKey) => {
-            state = emit('keyPressed', state, { key: activeKey });
-        });
-        activeKeys.forEach((activeKey) => {
-            state = emit('keyDown', state, { key: activeKey });
-        });
-        releasedKeys.forEach((activeKey) => {
-            state = emit('keyUp', state, { key: activeKey });
-        });
-        return state;
-    });
-    game.on('afterUpdate', (state) => {
-        resetPressedKeys();
-        resetReleasedKeys();
-        return state;
-    });
-}
-function isKeyPressed(key) {
-    return pressedKeys.includes(key);
-}
-function isKeyDown(key) {
-    return activeKeys.includes(key);
-}
-function isKeyReleased(key) {
-    return releasedKeys.includes(key);
-}
-function resetPressedKeys() {
-    pressedKeys = [];
-}
-function resetActiveKeys() {
-    activeKeys = [];
-}
-function resetReleasedKeys() {
-    releasedKeys = [];
-}
-function resetAllKeys() {
-    resetPressedKeys();
-    resetActiveKeys();
-    resetReleasedKeys();
-}
-
-const defaultState = {
-    entities: {},
-    sprites: {},
-};
-class Game {
-    constructor(size, { initialState = defaultState, containerSelector = 'body' } = {}) {
+class EventEmitter {
+    constructor() {
         this.eventHandlers = {};
-        const { canvas, context } = setupGame(containerSelector, size);
-        this.canvas = canvas;
-        this.context = context;
-        this.state = Object.assign({}, initialState);
         this.on = this.on.bind(this);
         this.emit = this.emit.bind(this);
         this.removeEventHandler = this.removeEventHandler.bind(this);
         this.removeAllEventHandlers = this.removeAllEventHandlers.bind(this);
-        setupLifecycleEvents(this);
-        setupDrawEvents(this);
-        setupKeyboardEvents(this);
-    }
-    start() {
-        this.state = this.emit('start', this.state, {});
-        start((time) => {
-            this.state = this.emit('tick', this.state, { time });
-        });
     }
     on(eventType, handler) {
         this.eventHandlers = Object.assign(Object.assign({}, this.eventHandlers), { [eventType]: [
@@ -200,6 +98,272 @@ class Game {
     }
     removeAllEventHandlers(eventType) {
         this.eventHandlers = objectWithout(this.eventHandlers, eventType);
+    }
+}
+
+/*! *****************************************************************************
+Copyright (c) Microsoft Corporation.
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+PERFORMANCE OF THIS SOFTWARE.
+***************************************************************************** */
+
+function __awaiter(thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+}
+
+class Loop {
+    constructor(update) {
+        this.isRunning = false;
+        this.update = update;
+    }
+    start() {
+        if (this.isRunning) {
+            return;
+        }
+        this.isRunning = true;
+        this.scheduleNextTick();
+    }
+    stop() {
+        if (this.rafHandle) {
+            window.cancelAnimationFrame(this.rafHandle);
+        }
+        this.isRunning = false;
+    }
+    tick() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return new Promise(resolve => {
+                this.rafHandle = window.requestAnimationFrame((time) => {
+                    this.update(time);
+                    resolve();
+                });
+            });
+        });
+    }
+    scheduleNextTick() {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!this.isRunning) {
+                return;
+            }
+            yield this.tick();
+            this.scheduleNextTick();
+        });
+    }
+}
+
+function setupUpdateAndDrawEvents(eventEmitter, canvas, context) {
+    eventEmitter.on('tick', (state, { time }, { emit }) => {
+        state = emit('beforeUpdate', state, { time });
+        state = emit('update', state, { time });
+        state = emit('afterUpdate', state, { time });
+        state = emit('beforeDraw', state, { time, context, canvas });
+        state = emit('draw', state, { time, context, canvas });
+        state = emit('afterDraw', state, { time, context, canvas });
+        return state;
+    });
+}
+
+let keysPressed = [];
+let keysDown = [];
+let keysUp = [];
+function setupKeyboardEvents(eventEmitter) {
+    window.addEventListener('keydown', (event) => {
+        const key = event.key;
+        if (!isKeyPressed(key) && !isKeyDown(key)) {
+            keysPressed = [...keysPressed, key];
+        }
+        if (!isKeyDown(key)) {
+            keysDown = [...keysDown, key];
+        }
+    });
+    window.addEventListener('keyup', (event) => {
+        const key = event.key;
+        if (isKeyDown(key)) {
+            keysDown = arrayWithout(keysDown, key);
+        }
+        if (!isKeyUp(key)) {
+            keysUp = [...keysUp, key];
+        }
+    });
+    window.addEventListener('blur', resetAllKeys);
+    eventEmitter.on('update', (state, updateEvent, { emit }) => {
+        keysPressed.forEach((keyPressed) => {
+            state = emit('keyPressed', state, { key: keyPressed });
+        });
+        keysDown.forEach((keyDown) => {
+            state = emit('keyDown', state, { key: keyDown });
+        });
+        keysUp.forEach((keyUp) => {
+            state = emit('keyUp', state, { key: keyUp });
+        });
+        return state;
+    });
+    eventEmitter.on('afterUpdate', (state) => {
+        resetKeysPressed();
+        resetKeysUp();
+        return state;
+    });
+}
+function isKeyPressed(key) {
+    return keysPressed.includes(key);
+}
+function isKeyDown(key) {
+    return keysDown.includes(key);
+}
+function isKeyUp(key) {
+    return keysUp.includes(key);
+}
+function resetKeysPressed() {
+    keysPressed = [];
+}
+function resetKeysDown() {
+    keysDown = [];
+}
+function resetKeysUp() {
+    keysUp = [];
+}
+function resetAllKeys() {
+    resetKeysPressed();
+    resetKeysDown();
+    resetKeysUp();
+}
+
+const mouseButtonMap = {
+    0: 'left',
+    1: 'middle',
+    2: 'right',
+    3: 'back',
+    4: 'forward',
+};
+let mouseButtonsDown = [];
+let mouseButtonsPressed = [];
+let mouseButtonsUp = [];
+let mousePosition = [0, 0];
+let previousMousePosition = mousePosition;
+function setupMouseEvents(eventEmitter, canvas) {
+    window.addEventListener('mousedown', (event) => {
+        if (!mouseButtonMap.hasOwnProperty(event.button)) {
+            return;
+        }
+        const mouseButton = mouseButtonMap[event.button];
+        if (!isMouseButtonDown(mouseButton) && !isMouseButtonPressed(mouseButton)) {
+            mouseButtonsDown = [...mouseButtonsDown, mouseButton];
+        }
+        if (!isMouseButtonPressed(mouseButton)) {
+            mouseButtonsPressed = [...mouseButtonsPressed, mouseButton];
+        }
+    });
+    window.addEventListener('mouseup', (event) => {
+        if (!mouseButtonMap.hasOwnProperty(event.button)) {
+            return;
+        }
+        const mouseButton = mouseButtonMap[event.button];
+        if (isMouseButtonPressed(mouseButton)) {
+            mouseButtonsPressed = arrayWithout(mouseButtonsPressed, mouseButton);
+        }
+        if (!isMouseButtonUp(mouseButton)) {
+            mouseButtonsUp = [...mouseButtonsUp, mouseButton];
+        }
+    });
+    window.addEventListener('blur', resetAllMouseButtons);
+    window.addEventListener('mousemove', (event) => {
+        const canvasBoundaries = canvas.getBoundingClientRect();
+        const horizontalScale = canvasBoundaries.width / canvas.width;
+        const verticalScale = canvasBoundaries.height / canvas.height;
+        const positionInScale = [
+            (event.clientX - canvasBoundaries.left) / horizontalScale,
+            (event.clientY - canvasBoundaries.top) / verticalScale,
+        ];
+        const x = Math.round(Math.min(Math.max(positionInScale[0], 0), canvas.width));
+        const y = Math.round(Math.min(Math.max(positionInScale[1], 0), canvas.height));
+        mousePosition = [x, y];
+    });
+    eventEmitter.on('update', (state, updateEvent, { emit }) => {
+        if (mousePosition[0] !== previousMousePosition[0] || mousePosition[1] !== previousMousePosition[1]) {
+            state = emit('mouseMove', state, { position: mousePosition });
+        }
+        mouseButtonsDown.forEach((button) => {
+            state = emit('mouseDown', state, { button, position: mousePosition });
+        });
+        mouseButtonsPressed.forEach((button) => {
+            state = emit('mousePressed', state, { button, position: mousePosition });
+        });
+        mouseButtonsUp.forEach((button) => {
+            state = emit('mouseUp', state, { button, position: mousePosition });
+        });
+        return state;
+    });
+    eventEmitter.on('afterUpdate', (state) => {
+        previousMousePosition = mousePosition;
+        resetMouseButtonsDown();
+        resetMouseButtonsUp();
+        return state;
+    });
+}
+function isMouseButtonPressed(mouseButton) {
+    return mouseButtonsPressed.includes(mouseButton);
+}
+function isMouseButtonDown(mouseButton) {
+    return mouseButtonsDown.includes(mouseButton);
+}
+function isMouseButtonUp(mouseButton) {
+    return mouseButtonsUp.includes(mouseButton);
+}
+function resetMouseButtonsPressed() {
+    mouseButtonsPressed = [];
+}
+function resetMouseButtonsDown() {
+    mouseButtonsDown = [];
+}
+function resetMouseButtonsUp() {
+    mouseButtonsUp = [];
+}
+function resetAllMouseButtons() {
+    resetMouseButtonsPressed();
+    resetMouseButtonsDown();
+    resetMouseButtonsUp();
+}
+
+const defaultState = {
+    entities: {},
+    sprites: {},
+};
+class Game {
+    constructor(size, { backgroundColor, containerSelector = 'body', initialState = defaultState, showSystemCursor, } = {}) {
+        const { canvas, context } = setupCanvas(containerSelector, size, showSystemCursor);
+        this.canvas = canvas;
+        this.context = context;
+        this.state = Object.assign({}, initialState);
+        this.eventEmitter = new EventEmitter();
+        this.loop = new Loop(this.loopCallback.bind(this));
+        setupUpdateAndDrawEvents(this.eventEmitter, this.canvas, this.context);
+        setupKeyboardEvents(this.eventEmitter);
+        setupMouseEvents(this.eventEmitter, this.canvas);
+        this.eventEmitter.on('beforeDraw', (state, { canvas, context }) => {
+            clearCanvas(canvas, context, backgroundColor);
+            return state;
+        });
+    }
+    start() {
+        this.state = this.eventEmitter.emit('start', this.state, {});
+        this.loop.start();
+    }
+    loopCallback(time) {
+        this.state = this.eventEmitter.emit('tick', this.state, { time });
     }
 }
 
@@ -297,7 +461,7 @@ function drawSprite(sprite, context, position, frameIndex = 0) {
     }
     const frame = sprite.frames[frameIndex];
     const image = getImageForFilePath(frame.file);
-    context.drawImage(image, frame.origin.x, frame.origin.y, frame.size.width, frame.size.height, (position.x + sprite.offset.x), (position.y + sprite.offset.y), frame.size.width, frame.size.height);
+    context.drawImage(image, frame.origin[0], frame.origin[1], frame.size[0], frame.size[1], (position[0] + sprite.offset[0]), (position[1] + sprite.offset[1]), frame.size[0], frame.size[1]);
 }
 const imageCache = {};
 function getImageForFilePath(filePath, cached = true) {
@@ -340,4 +504,30 @@ function calculateNewFrameIndex(amountOfFrames, framesPerSecond, elapsedTime, is
     return Math.min((Math.round(elapsedTime / 1000) / framesPerSecond), amountOfFrames - 1);
 }
 
-export { Game, calculateNewFrameIndex, createSpriteComponent, defaultState, doesEntityMatch, drawSprite, findEntities, findEntity, getEntities, getEntity, getImageForFilePath, getSprite, setComponent, setEntities, setEntity, setSprite, setSprites, updateAnimatedSprites };
+function isPointInPoint(a, b) {
+    return a[0] === b[0]
+        && a[1] === b[1];
+}
+/*
+ * Figuring out rectangles in my head gives me a head ache, so it's comment time.
+ * When given rectangle r = [[left, top], [right, bottom]], this is how you find each corner:
+ *
+ * top 		=> r[0][1]
+ * right 	=> r[1][0]
+ * bottom 	=> r[1][1]
+ * left 	=> r[0][0]
+ */
+function isPointInRectangle(point, rectangle) {
+    return point[0] >= rectangle[0][0]
+        && point[1] >= rectangle[0][1]
+        && point[0] <= rectangle[1][0]
+        && point[1] <= rectangle[1][1];
+}
+function isRectangleInRectangle(a, b) {
+    return a[0][0] <= b[1][0]
+        && a[1][0] >= b[0][0]
+        && a[0][1] <= b[1][1]
+        && a[1][1] >= b[0][1];
+}
+
+export { EventEmitter, Game, Loop, calculateNewFrameIndex, clearCanvas, createSpriteComponent, defaultState, doesEntityMatch, drawSprite, findEntities, findEntity, getEntities, getEntity, getImageForFilePath, getSprite, isPointInPoint, isPointInRectangle, isRectangleInRectangle, setComponent, setEntities, setEntity, setSprite, setSprites, setupCanvas, setupKeyboardEvents, setupMouseEvents, setupUpdateAndDrawEvents, updateAnimatedSprites };

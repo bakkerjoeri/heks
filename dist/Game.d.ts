@@ -1,36 +1,36 @@
-import { LifecycleEvents } from './events/lifecycle';
-import { DrawEvents } from './events/draw';
-import { KeyboardEvents } from './events/keyboard.js';
-import type { Size, GameState } from './types';
+import { EventEmitter } from './EventEmitter.js';
+import { Loop } from './Loop.js';
+import type { EntityState } from './entities.js';
+import type { SpriteState } from './sprites.js';
+import type { UpdateEvents, DrawEvents } from './events/updateAndDraw.js';
+import type { KeyboardEvents } from './events/keyboard.js';
+import type { MouseEvents } from './events/mouse.js';
 interface GameOptions<State> {
-    initialState?: State;
+    backgroundColor?: string;
     containerSelector?: string;
+    initialState?: State;
+    showSystemCursor?: boolean;
+}
+export interface TickEvent {
+    time: number;
+}
+export interface LifeCycleEvents {
+    start: Record<string, never>;
+    tick: TickEvent;
+}
+export interface GameState extends EntityState, SpriteState {
+}
+export interface GameEvents extends LifeCycleEvents, UpdateEvents, DrawEvents, KeyboardEvents, MouseEvents {
 }
 export declare const defaultState: GameState;
-export interface GameEvents extends LifecycleEvents, DrawEvents, KeyboardEvents {
-    tick: {
-        time: number;
-    };
-}
-export interface EventHandler<State extends GameState, Event, Events extends GameEvents> {
-    (state: State, event: Event, context: EventHandlerContext<State, Events>): State;
-}
-export interface EventHandlerContext<State extends GameState, Events extends GameEvents> {
-    on: Game<State, Events>['on'];
-    emit: Game<State, Events>['emit'];
-    removeEventHandler: Game<State, Events>['removeEventHandler'];
-    removeAllEventHandlers: Game<State, Events>['removeAllEventHandlers'];
-}
 export declare class Game<State extends GameState = GameState, Events extends GameEvents = GameEvents> {
+    private state;
     readonly canvas: HTMLCanvasElement;
     readonly context: CanvasRenderingContext2D;
-    private state;
-    private eventHandlers;
-    constructor(size: Size, { initialState, containerSelector }?: GameOptions<State>);
+    readonly eventEmitter: EventEmitter<Events, State>;
+    readonly loop: Loop;
+    constructor(size: [width: number, height: number], { backgroundColor, containerSelector, initialState, showSystemCursor, }?: GameOptions<State>);
     start(): void;
-    on<EventType extends keyof Events>(eventType: EventType, handler: EventHandler<State, Events[EventType], Events>): void;
-    emit<EventType extends keyof Events>(eventType: EventType, currentState: State, event: Events[EventType]): State;
-    removeEventHandler<EventType extends keyof Events>(eventType: EventType, handler: EventHandler<State, Events[EventType], Events>): void;
-    removeAllEventHandlers<EventType extends keyof Events>(eventType: EventType): void;
+    private loopCallback;
 }
 export {};
