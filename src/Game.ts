@@ -5,8 +5,6 @@ import { setupUpdateAndDrawEvents } from './events/updateAndDraw.js';
 import { setupKeyboardEvents } from './events/keyboard.js';
 import { setupMouseEvents } from './events/mouse.js';
 
-import type { EntityState } from './entities.js';
-import type { SpriteState } from './sprites.js';
 import type { UpdateEvents, DrawEvents } from './events/updateAndDraw.js';
 import type { KeyboardEvents } from './events/keyboard.js';
 import type { MouseEvents } from './events/mouse.js';
@@ -25,16 +23,10 @@ export interface LifeCycleEvents {
 	tick: TickEvent;
 }
 
-export interface GameState extends EntityState, SpriteState {}
 export interface GameEvents extends LifeCycleEvents, UpdateEvents, DrawEvents, KeyboardEvents, MouseEvents {}
 
-export const defaultState: GameState = {
-	entities: {},
-	sprites: {},
-};
-
 export class Game<
-	State extends GameState = GameState,
+	State = Record<string, unknown>,
 	Events extends GameEvents = GameEvents
 > {
 	public state: State;
@@ -49,7 +41,7 @@ export class Game<
 		{
 			backgroundColor,
 			containerSelector = 'body',
-			initialState = defaultState as State,
+			initialState = {} as State,
 			showSystemCursor,
 		}: GameOptions<State> = {}
 	) {

@@ -20,6 +20,8 @@ export interface SpriteState {
 	};
 }
 
+export const spriteState: SpriteState = { sprites: {} };
+
 export const setSprite = (sprite: Sprite) => <State extends SpriteState>(state: State): State => {
 	return {
 		...state,

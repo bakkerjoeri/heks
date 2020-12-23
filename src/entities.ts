@@ -13,6 +13,8 @@ export interface EntityState {
 	};
 }
 
+export const entityState: EntityState = { entities: {} };
+
 export interface Components {
 	[componentName: string]: Component;
 }

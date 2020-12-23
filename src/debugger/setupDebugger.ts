@@ -1,9 +1,9 @@
 import { createApp, ref } from 'vue';
 import Debugger from './Debugger.vue';
-import type { Game, GameEvents, GameState } from '../Game.js';
+import type { Game, GameEvents } from '../Game.js';
 
 export function setupDebugger<
-	State extends GameState,
+	State,
 	Events extends GameEvents,
 >(game: Game<State, Events>): void {
 	const heksData = ref({
