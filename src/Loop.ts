@@ -1,5 +1,7 @@
 export class Loop {
 	public isRunning = false;
+	public time = 0;
+
 	private update: (time: number) => any;
 	private rafHandle: number | undefined;
 
@@ -27,6 +29,7 @@ export class Loop {
 	public async tick(): Promise<void> {
 		return new Promise(resolve => {
 			this.rafHandle = window.requestAnimationFrame((time) => {
+				this.time = time;
 				this.update(time);
 				resolve();
 			});

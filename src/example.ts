@@ -11,13 +11,15 @@ interface State extends GameState {
 
 type MyHandler<Event> = EventHandler<Event, GameEvents, State>;
 
+const size = [32, 18] as [number, number];
+
 const state: State = {
 	...defaultState,
-	player: { position: [180, 60]},
+	player: { position: [Math.round(size[0] / 2), Math.round(size[1] / 2)]},
 	mouse: { position: [0, 0]},
 };
 
-const game = new Game<State>([320, 180], {
+const game = new Game<State>(size, {
 	containerSelector: '.Game',
 	initialState: state,
 	showSystemCursor: false,
@@ -39,8 +41,8 @@ const movePlayer: MyHandler<UpdateEvent> = (state) => {
 		player: {
 			...state.player,
 			position: [
-				Math.min(320, Math.max(0, state.player.position[0] + Math.round(1 - (Math.random() * 2)))),
-				Math.min(180, Math.max(0, state.player.position[1] + Math.round(1 - (Math.random() * 2)))),
+				Math.min(size[0] - 1, Math.max(0, state.player.position[0] + Math.round(1 - (Math.random() * 2)))),
+				Math.min(size[1] - 1, Math.max(0, state.player.position[1] + Math.round(1 - (Math.random() * 2)))),
 			],
 		},
 	};
@@ -65,6 +67,6 @@ game.eventEmitter.on('mouseMove', updateMousePosition);
 game.eventEmitter.on('draw', drawPlayer);
 game.eventEmitter.on('draw', drawCursor);
 
-setupDebugger(game, '.Debugger');
+setupDebugger(game);
 
 game.start();
