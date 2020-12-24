@@ -7,6 +7,9 @@ import { setupDebugger } from './debugger/setupDebugger.js';
 interface State {
 	player: { position: [x: number, y: number] };
 	mouse: { position: [x: number, y: number] };
+	context: {
+		backgroundColor: string;
+	};
 }
 
 type MyHandler<Event> = EventHandler<Event, GameEvents, State>;
@@ -16,6 +19,9 @@ const size = [32, 18] as [number, number];
 const state: State = {
 	player: { position: [Math.round(size[0] / 2), Math.round(size[1] / 2)]},
 	mouse: { position: [0, 0]},
+	context: {
+		backgroundColor: '#000000',
+	},
 };
 
 const game = new Game<State>(size, {

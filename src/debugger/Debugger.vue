@@ -14,6 +14,7 @@
 			</button>
 
 			<input
+				v-if="!isRunning"
 				type="range"
 				step="1"
 				min="0"
@@ -22,7 +23,7 @@
 				@input="handleChangeStateHistory"
 			>
 
-			<button v-if="!isReplaying" @click="isReplaying = true" :disabled="stateHistoryIndex === stateHistory.length - 1">
+			<button v-if="!isReplaying && !isRunning" @click="isReplaying = true" :disabled="stateHistoryIndex === stateHistory.length - 1">
 				Replay
 			</button>
 
@@ -30,7 +31,7 @@
 				Pause replay
 			</button>
 
-			<select v-model="replaySpeed" :disabled="isReplaying">
+			<select v-model="replaySpeed" :disabled="isReplaying" v-if="!isRunning">
 				<option :value="0.05">0.05x</option>
 				<option :value="0.1">0.1x</option>
 				<option :value="0.25">0.25x</option>
@@ -41,7 +42,7 @@
 		</header>
 
 		<aside class="Debugger__sidebar StateInspector">
-			<pre>{{ stateString }}</pre>
+			<value-inspector :value="state"/>
 		</aside>
 
 		<main
@@ -137,8 +138,8 @@
 <style lang="scss">
 	.Debugger {
 		display: grid;
-		grid-template-columns: 200px 1fr;
-		grid-template-rows: min-content 1fr;
+		grid-template-columns: 1fr 320px;
+		grid-template-rows: 32px 1fr;
 	}
 
 	.Debugger__header {
@@ -147,12 +148,22 @@
 	}
 
 	.Debugger__sidebar {
-		grid-column: 1;
+		grid-column: 2;
 		grid-row: 2 / -1;
 	}
 
 	.Debugger__mainContent {
-		grid-column: 2 / -1;
+		grid-column: 1;
 		grid-row: 2 / 3;
+	}
+
+	.Controls {
+		display: flex;
+		align-items: center;
+		padding: 5px 0px;
+	}
+
+	.StateInspector {
+		padding: 0px 5px;
 	}
 </style>

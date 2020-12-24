@@ -1,5 +1,9 @@
 import { createApp, ref } from 'vue';
 import Debugger from './Debugger.vue';
+import PropertyInspector from './components/PropertyInspector.vue';
+import ValueInspector from './components/ValueInspector.vue';
+import Icon from './icons/Icon.vue';
+
 import type { Game, GameEvents } from '../Game.js';
 
 export function setupDebugger<
@@ -15,6 +19,11 @@ export function setupDebugger<
 	const debuggerApp = createApp(Debugger, {
 		isRunning: heksData.value.isRunning,
 	});
+
+	debuggerApp.component('value-inspector', ValueInspector);
+	debuggerApp.component('property-inspector', PropertyInspector);
+	debuggerApp.component('icon', Icon);
+
 	debuggerApp.provide('heksData', heksData);
 	debuggerApp.config.globalProperties.$canvas = game.canvas;
 	debuggerApp.config.globalProperties.$startGame = () => {
