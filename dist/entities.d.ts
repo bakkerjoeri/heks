@@ -7,6 +7,7 @@ export interface EntityState {
         [entityId: string]: Entity;
     };
 }
+export declare const entityState: EntityState;
 export interface Components {
     [componentName: string]: Component;
 }

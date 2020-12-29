@@ -14,6 +14,7 @@ export interface SpriteState {
         [spriteName: string]: Sprite;
     };
 }
+export declare const spriteState: SpriteState;
 export declare const setSprite: (sprite: Sprite) => <State extends SpriteState>(state: State) => State;
 export declare const setSprites: (sprites: Sprite[]) => <State extends SpriteState>(state: State) => State;
 export declare function getSprite<State extends SpriteState>(state: State, name: string): Sprite;

@@ -1,5 +1,8 @@
 export declare class Loop {
-    private isRunning;
+    isRunning: boolean;
+    time: number;
+    previousTime: number;
+    fps: number;
     private update;
     private rafHandle;
     constructor(update: Loop['update']);
