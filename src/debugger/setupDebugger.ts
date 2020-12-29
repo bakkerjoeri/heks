@@ -12,7 +12,8 @@ export function setupDebugger<
 >(game: Game<State, Events>): void {
 	const heksData = ref({
 		state: { ...game.state },
-		time: 0,
+		time: game.loop.time,
+		fps: game.loop.fps,
 		isRunning: game.loop.isRunning,
 	});
 
@@ -62,6 +63,7 @@ export function setupDebugger<
 		heksData.value.state = { ...state as any };
 		heksData.value.time = time;
 		heksData.value.isRunning = game.loop.isRunning;
+		heksData.value.fps = game.loop.fps;
 
 		return state;
 	});

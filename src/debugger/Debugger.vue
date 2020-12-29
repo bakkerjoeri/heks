@@ -1,44 +1,50 @@
 <template>
 	<div class="Debugger">
-		<header class="Debugger__header Controls">
-			<button v-if="!isRunning" @click="$startGame">
-				Resume
-			</button>
+		<header class="Debugger__header">
+			<div class="FpsMeter">
+				{{ fps }} FPS
+			</div>
 
-			<button v-if="isRunning"  @click="$stopGame">
-				Pause
-			</button>
+			<div class="Controls">
+				<button v-if="!isRunning" @click="$startGame">
+					Resume
+				</button>
 
-			<button v-if="!isRunning" @click="$tickGame">
-				Tick
-			</button>
+				<button v-if="isRunning"  @click="$stopGame">
+					Pause
+				</button>
 
-			<input
-				v-if="!isRunning"
-				type="range"
-				step="1"
-				min="0"
-				:max="stateHistory.length - 1"
-				v-model.number="stateHistoryIndex"
-				@input="handleChangeStateHistory"
-			>
+				<button v-if="!isRunning" @click="$tickGame">
+					Tick
+				</button>
 
-			<button v-if="!isReplaying && !isRunning" @click="isReplaying = true" :disabled="stateHistoryIndex === stateHistory.length - 1">
-				Replay
-			</button>
+				<input
+					v-if="!isRunning"
+					type="range"
+					step="1"
+					min="0"
+					:max="stateHistory.length - 1"
+					v-model.number="stateHistoryIndex"
+					@input="handleChangeStateHistory"
+				>
 
-			<button v-if="isReplaying" @click="isReplaying = false">
-				Pause replay
-			</button>
+				<button v-if="!isReplaying && !isRunning" @click="isReplaying = true" :disabled="stateHistoryIndex === stateHistory.length - 1">
+					Replay
+				</button>
 
-			<select v-model="replaySpeed" :disabled="isReplaying" v-if="!isRunning">
-				<option :value="0.05">0.05x</option>
-				<option :value="0.1">0.1x</option>
-				<option :value="0.25">0.25x</option>
-				<option :value="0.5">0.5x</option>
-				<option :value="0.75">0.75x</option>
-				<option :value="1">1x</option>
-			</select>
+				<button v-if="isReplaying" @click="isReplaying = false">
+					Pause replay
+				</button>
+
+				<select v-model="replaySpeed" :disabled="isReplaying" v-if="!isRunning">
+					<option :value="0.05">0.05x</option>
+					<option :value="0.1">0.1x</option>
+					<option :value="0.25">0.25x</option>
+					<option :value="0.5">0.5x</option>
+					<option :value="0.75">0.75x</option>
+					<option :value="1">1x</option>
+				</select>
+			</div>
 		</header>
 
 		<aside class="Debugger__sidebar StateInspector">
@@ -71,6 +77,9 @@
 		computed: {
 			time() {
 				return this.heksData.value.time;
+			},
+			fps() {
+				return this.heksData.value.fps.toFixed(1);
 			},
 			isRunning() {
 				return this.heksData.value.isRunning;
@@ -136,6 +145,10 @@
 </script>
 
 <style lang="scss">
+	* {
+		box-sizing: border-box;
+	}
+
 	.Debugger {
 		display: grid;
 		grid-template-columns: 1fr 320px;
@@ -143,6 +156,8 @@
 	}
 
 	.Debugger__header {
+		display: flex;
+		align-items: center;
 		grid-column: 1 / -1;
 		grid-row: 1;
 	}
@@ -155,6 +170,12 @@
 	.Debugger__mainContent {
 		grid-column: 1;
 		grid-row: 2 / 3;
+	}
+
+	.FpsMeter {
+		min-width: 60px;
+		font-family: Monaco, monospace;
+		font-size: 12px;
 	}
 
 	.Controls {
