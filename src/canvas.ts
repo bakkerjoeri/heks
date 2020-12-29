@@ -26,13 +26,11 @@ export function setupCanvas(
 
 	/**
 	 * We give the canvas the user defined pixel size through element attributes,
-	 * but make sure it fills it's container through CSS.
+	 * and make sure it fills it's container width through CSS.
 	 */
 	canvas.setAttribute('width', (size[0]).toString());
 	canvas.setAttribute('height', (size[1]).toString());
 	canvas.style.width = '100%';
-	canvas.style.height = '100%';
-	canvas.style.objectFit = 'contain';
 
 	/**
 	 * By default an inline element, the canvas can have some stray spacing.
