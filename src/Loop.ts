@@ -1,14 +1,21 @@
 export class Loop {
 	public isRunning = false;
 	public time = 0;
-	public previousTime = 0;
-	public fps = 0;
 
-	private update: (time: number) => any;
+	private previousTime = 0;
+	private readonly update: (time: number) => any;
 	private rafHandle: number | undefined;
 
 	constructor(update: Loop['update']) {
 		this.update = update;
+	}
+
+	get fps(): number {
+		if (this.time === this.previousTime) {
+			return 0;
+		}
+
+		return 1 / ((this.time - this.previousTime) / 1000);
 	}
 
 	public start(): void {
@@ -31,15 +38,8 @@ export class Loop {
 	public tick(): Promise<void> {
 		return new Promise(resolve => {
 			this.rafHandle = window.requestAnimationFrame((time) => {
+				this.previousTime = this.time;
 				this.time = time;
-
-				if (this.time === this.previousTime) {
-					this.fps = 0;
-				} else {
-					this.fps = 1 / ((this.time - this.previousTime) / 1000)
-				}
-
-				this.previousTime = time;
 				this.update(time);
 				resolve();
 			});

@@ -10,5 +10,3 @@ export * from './collision.js';
 export * from './events/updateAndDraw.js';
 export * from './events/keyboard.js';
 export * from './events/mouse.js';
-
-export * from './debugger/setupDebugger.js';
