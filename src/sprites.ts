@@ -1,6 +1,7 @@
 import { pipe } from '@bakkerjoeri/fp';
 import { setComponent, setEntities, findEntities, getEntities } from './entities.js';
 import type { EntityState } from './entities.js';
+import { getImage } from './assets.js';
 
 export interface SpriteFrame {
 	file: string;
@@ -87,7 +88,7 @@ export function drawSprite(
 	}
 
 	const frame = sprite.frames[frameIndex];
-	const image = getImageForFilePath(frame.file);
+	const image = getImage(frame.file);
 
 	context.drawImage(
 		image,
@@ -96,27 +97,6 @@ export function drawSprite(
 		(position[0] + sprite.offset[0]), (position[1] + sprite.offset[1]),
 		frame.size[0], frame.size[1],
 	);
-}
-
-const imageCache: {
-	[path: string]: HTMLImageElement;
-} = {};
-
-export function getImageForFilePath(filePath: string, cached = true): HTMLImageElement {
-	if (cached && imageCache[filePath]) {
-		return imageCache[filePath];
-	}
-
-	const image = new Image();
-	image.src = filePath;
-	imageCache[filePath] = image;
-
-	image.onerror = (): void => {
-		delete imageCache[filePath];
-		throw new Error(`No image found at ${filePath}.`);
-	}
-
-	return image;
 }
 
 export function updateAnimatedSprites<
