@@ -34,7 +34,6 @@ interface CreateSpriteOptions {
 }
 export declare function createSpriteComponent(name: string, { startingFrame, framesPerSecond, isLooping, isAnimating }?: CreateSpriteOptions): SpriteComponent;
 export declare function drawSprite(sprite: Sprite, context: CanvasRenderingContext2D, position: [x: number, y: number], frameIndex?: number): void;
-export declare function getImageForFilePath(filePath: string, cached?: boolean): HTMLImageElement;
 export declare function updateAnimatedSprites<State extends SpriteState & EntityState>(state: State, { time }: {
     time: number;
 }): State;

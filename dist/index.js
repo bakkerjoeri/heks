@@ -436,6 +436,17 @@ function findEntity(entities, filters) {
     return entities.find(doesEntityMatch(filters));
 }
 
+const imageCache = {};
+function getImage(url, fromCache = true) {
+    if (fromCache && imageCache[url]) {
+        return imageCache[url];
+    }
+    const image = new Image();
+    image.src = url;
+    imageCache[url] = image;
+    return image;
+}
+
 const spriteState = { sprites: {} };
 const setSprite = (sprite) => (state) => {
     return Object.assign(Object.assign({}, state), { sprites: Object.assign(Object.assign({}, state.sprites), { [sprite.name]: sprite }) });
@@ -464,22 +475,8 @@ function drawSprite(sprite, context, position, frameIndex = 0) {
         throw new Error(`Sprite ${sprite.name} does not have frame with index ${frameIndex}`);
     }
     const frame = sprite.frames[frameIndex];
-    const image = getImageForFilePath(frame.file);
+    const image = getImage(frame.file);
     context.drawImage(image, frame.origin[0], frame.origin[1], frame.size[0], frame.size[1], (position[0] + sprite.offset[0]), (position[1] + sprite.offset[1]), frame.size[0], frame.size[1]);
-}
-const imageCache = {};
-function getImageForFilePath(filePath, cached = true) {
-    if (cached && imageCache[filePath]) {
-        return imageCache[filePath];
-    }
-    const image = new Image();
-    image.src = filePath;
-    imageCache[filePath] = image;
-    image.onerror = () => {
-        delete imageCache[filePath];
-        throw new Error(`No image found at ${filePath}.`);
-    };
-    return image;
 }
 function updateAnimatedSprites(state, { time }) {
     const entitiesWithSprites = findEntities(getEntities(state), {
@@ -534,4 +531,4 @@ function isRectangleInRectangle(a, b) {
         && a[1][1] >= b[0][1];
 }
 
-export { EventEmitter, Game, Loop, calculateNewFrameIndex, clearCanvas, createSpriteComponent, doesEntityMatch, drawSprite, entityState, findEntities, findEntity, getEntities, getEntity, getImageForFilePath, getSprite, isPointInPoint, isPointInRectangle, isRectangleInRectangle, setComponent, setEntities, setEntity, setSprite, setSprites, setupCanvas, setupKeyboardEvents, setupMouseEvents, setupUpdateAndDrawEvents, spriteState, updateAnimatedSprites };
+export { EventEmitter, Game, Loop, calculateNewFrameIndex, clearCanvas, createSpriteComponent, doesEntityMatch, drawSprite, entityState, findEntities, findEntity, getEntities, getEntity, getSprite, isPointInPoint, isPointInRectangle, isRectangleInRectangle, setComponent, setEntities, setEntity, setSprite, setSprites, setupCanvas, setupKeyboardEvents, setupMouseEvents, setupUpdateAndDrawEvents, spriteState, updateAnimatedSprites };
