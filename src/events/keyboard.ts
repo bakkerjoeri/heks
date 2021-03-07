@@ -19,7 +19,7 @@ let keysDown: Key[] = [];
 let keysUp: Key[] = [];
 
 export function setupKeyboardEvents<
-	Events extends KeyEvent & UpdateEvents,
+	Events extends KeyEvents & UpdateEvents,
 	State
 >(eventEmitter: EventEmitter<Events, State>,): void {
 	window.addEventListener('keydown', (event) => {

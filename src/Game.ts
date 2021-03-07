@@ -6,7 +6,7 @@ import { setupKeyboardEvents } from './events/keyboard.js';
 import { setupMouseEvents } from './events/mouse.js';
 
 import type { UpdateEvents, DrawEvents } from './events/updateAndDraw.js';
-import type { KeyboardEvents } from './events/keyboard.js';
+import type { KeyEvents } from './events/keyboard.js';
 import type { MouseEvents } from './events/mouse.js';
 
 interface GameOptions<State> {
@@ -23,7 +23,7 @@ export interface LifeCycleEvents {
 	tick: TickEvent;
 }
 
-export interface GameEvents extends LifeCycleEvents, UpdateEvents, DrawEvents, KeyboardEvents, MouseEvents {}
+export interface GameEvents extends LifeCycleEvents, UpdateEvents, DrawEvents, KeyEvents, MouseEvents {}
 
 export class Game<
 	State = Record<string, unknown>,
