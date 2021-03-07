@@ -9,4 +9,4 @@ export interface KeyEvents {
     keyDown: KeyEvent;
     keyUp: KeyEvent;
 }
-export declare function setupKeyboardEvents<Events extends KeyEvent & UpdateEvents, State>(eventEmitter: EventEmitter<Events, State>): void;
+export declare function setupKeyboardEvents<Events extends KeyEvents & UpdateEvents, State>(eventEmitter: EventEmitter<Events, State>): void;
