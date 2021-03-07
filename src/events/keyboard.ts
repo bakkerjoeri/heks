@@ -4,14 +4,14 @@ import { UpdateEvents } from './updateAndDraw';
 
 export type Key = string;
 
-export interface KeyboardEvent {
+export interface KeyEvent {
 	key: Key;
 }
 
-export interface KeyboardEvents {
-	keyPressed: KeyboardEvent;
-	keyDown: KeyboardEvent;
-	keyUp: KeyboardEvent;
+export interface KeyEvents {
+	keyPressed: KeyEvent;
+	keyDown: KeyEvent;
+	keyUp: KeyEvent;
 }
 
 let keysPressed: Key[] = [];
@@ -19,7 +19,7 @@ let keysDown: Key[] = [];
 let keysUp: Key[] = [];
 
 export function setupKeyboardEvents<
-	Events extends KeyboardEvents & UpdateEvents,
+	Events extends KeyEvent & UpdateEvents,
 	State
 >(eventEmitter: EventEmitter<Events, State>,): void {
 	window.addEventListener('keydown', (event) => {
