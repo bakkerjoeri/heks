@@ -1,12 +1,12 @@
 import { EventEmitter } from '../EventEmitter';
 import { UpdateEvents } from './updateAndDraw';
 export declare type Key = string;
-export interface KeyboardEvent {
+export interface KeyEvent {
     key: Key;
 }
-export interface KeyboardEvents {
-    keyPressed: KeyboardEvent;
-    keyDown: KeyboardEvent;
-    keyUp: KeyboardEvent;
+export interface KeyEvents {
+    keyPressed: KeyEvent;
+    keyDown: KeyEvent;
+    keyUp: KeyEvent;
 }
-export declare function setupKeyboardEvents<Events extends KeyboardEvents & UpdateEvents, State>(eventEmitter: EventEmitter<Events, State>): void;
+export declare function setupKeyboardEvents<Events extends KeyEvent & UpdateEvents, State>(eventEmitter: EventEmitter<Events, State>): void;

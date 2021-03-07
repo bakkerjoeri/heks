@@ -436,7 +436,21 @@ function findEntity(entities, filters) {
     return entities.find(doesEntityMatch(filters));
 }
 
+const audioCache = {};
 const imageCache = {};
+function loadAssets(assets) {
+    return __awaiter(this, void 0, void 0, function* () {
+        yield Promise.all(assets.map(assetDefinition => {
+            if (assetDefinition.type === 'audio') {
+                return loadAudio(assetDefinition.url);
+            }
+            if (assetDefinition.type === 'image') {
+                return loadImage(assetDefinition.url);
+            }
+            throw new Error(`Unsupported asset type ${assetDefinition.type}.`);
+        }));
+    });
+}
 function getImage(url, fromCache = true) {
     if (fromCache && imageCache[url]) {
         return imageCache[url];
@@ -445,6 +459,55 @@ function getImage(url, fromCache = true) {
     image.src = url;
     imageCache[url] = image;
     return image;
+}
+function loadImage(url, fromCache = true) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const image = getImage(url, fromCache);
+        return new Promise((resolve, reject) => {
+            if (image.complete) {
+                return resolve(image);
+            }
+            image.onload = () => {
+                resolve(image);
+                image.onload = null;
+                image.onerror = null;
+            };
+            image.onerror = (error) => {
+                reject(error);
+                image.onload = null;
+                image.onerror = null;
+            };
+        });
+    });
+}
+function getAudio(url, fromCache = true) {
+    if (fromCache && audioCache[url]) {
+        return audioCache[url];
+    }
+    const audio = new Audio();
+    audio.src = url;
+    audioCache[url] = audio;
+    return audio;
+}
+function loadAudio(url, fromCache = true) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const audio = getAudio(url, fromCache);
+        return new Promise((resolve, reject) => {
+            if (audio.readyState === 4) {
+                return resolve(audio);
+            }
+            audio.onload = () => {
+                resolve(audio);
+                audio.onload = null;
+                audio.onerror = null;
+            };
+            audio.onerror = (error) => {
+                reject(error);
+                audio.onload = null;
+                audio.onerror = null;
+            };
+        });
+    });
 }
 
 const spriteState = { sprites: {} };
@@ -531,4 +594,4 @@ function isRectangleInRectangle(a, b) {
         && a[1][1] >= b[0][1];
 }
 
-export { EventEmitter, Game, Loop, calculateNewFrameIndex, clearCanvas, createSpriteComponent, doesEntityMatch, drawSprite, entityState, findEntities, findEntity, getEntities, getEntity, getSprite, isPointInPoint, isPointInRectangle, isRectangleInRectangle, setComponent, setEntities, setEntity, setSprite, setSprites, setupCanvas, setupKeyboardEvents, setupMouseEvents, setupUpdateAndDrawEvents, spriteState, updateAnimatedSprites };
+export { EventEmitter, Game, Loop, calculateNewFrameIndex, clearCanvas, createSpriteComponent, doesEntityMatch, drawSprite, entityState, findEntities, findEntity, getAudio, getEntities, getEntity, getImage, getSprite, isPointInPoint, isPointInRectangle, isRectangleInRectangle, loadAssets, loadAudio, loadImage, setComponent, setEntities, setEntity, setSprite, setSprites, setupCanvas, setupKeyboardEvents, setupMouseEvents, setupUpdateAndDrawEvents, spriteState, updateAnimatedSprites };
