@@ -6,6 +6,7 @@ export * from './canvas.js';
 export * from './sprites.js';
 export * from './entities.js';
 export * from './collision.js';
+export * from './assets.js';
 
 export * from './events/updateAndDraw.js';
 export * from './events/keyboard.js';
