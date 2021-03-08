@@ -102,12 +102,12 @@ export function drawSprite(
 export function updateAnimatedSprites<
 	State extends SpriteState & EntityState
 >(state: State, { time }: { time: number }): State {
-	const entitiesWithSprites = findEntities(getEntities(state), {
+	const entitiesWithSprites = findEntities<{sprite: SpriteComponent}>(getEntities(state), {
 		sprite: true,
 	});
 
 	const updatedEntities = entitiesWithSprites.map(entity => {
-		const spriteComponent = entity.sprite as SpriteComponent;
+		const spriteComponent = entity.sprite;
 		const spriteOfEntity = getSprite(state, entity.sprite.name);
 
 		if (

@@ -58,12 +58,12 @@ export const setComponent = (componentName: string) => <ValueType = any>(value: 
 	};
 }
 
-export function getEntity<State extends EntityState>(state: State, entityId: string): Entity {
+export function getEntity<ExpectedComponents extends Components, State extends EntityState>(state: State, entityId: string): (Entity & ExpectedComponents) {
 	if (!state.entities.hasOwnProperty(entityId)) {
 		throw new Error(`Entity with id ${entityId} doesn't exist.`);
 	}
 
-	return state.entities[entityId];
+	return state.entities[entityId] as (Entity & ExpectedComponents);
 }
 
 export function getEntities<State extends EntityState>(state: State): Entity[] {
@@ -93,10 +93,10 @@ export const doesEntityMatch = (filters: ComponentFilterMap) => (entity: Entity)
 	});
 }
 
-export function findEntities(entities: Entity[], filters: ComponentFilterMap): Entity[] {
-	return entities.filter(doesEntityMatch(filters));
+export function findEntities<ExpectedComponents extends Components>(entities: Entity[], filters: ComponentFilterMap): (Entity & ExpectedComponents)[] {
+	return entities.filter(doesEntityMatch(filters)) as (Entity & ExpectedComponents)[];
 }
 
-export function findEntity(entities: Entity[], filters: ComponentFilterMap): Entity | undefined {
-	return entities.find(doesEntityMatch(filters));
+export function findEntity<ExpectedComponents extends Components>(entities: Entity[], filters: ComponentFilterMap): (Entity & ExpectedComponents) | undefined {
+	return entities.find(doesEntityMatch(filters)) as (Entity & ExpectedComponents);
 }
