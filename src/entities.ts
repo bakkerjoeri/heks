@@ -82,7 +82,7 @@ export const doesEntityMatch = (filters: ComponentFilterMap) => (entity: Entity)
 		}
 
 		if (typeof filterValue === 'boolean' && !filterValue) {
-			return !entity.hasOwnProperty(componentName) || !entity[componentName];
+			return !entity.hasOwnProperty(componentName) || entity[componentName];
 		}
 
 		if (typeof filterValue === 'boolean' && filterValue) {
