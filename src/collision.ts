@@ -1,7 +1,7 @@
-type Vector2D = [number, number];
-type Rectangle = [Vector2D, Vector2D];
+type Point = [x: number, y: number];
+type Rectangle = [[left: number, top: number], [right: number, bottom: number]];
 
-export function isPointInPoint(a: Vector2D, b: Vector2D): boolean {
+export function isPointInPoint(a: Point, b: Point): boolean {
 	return a[0] === b[0]
 		&& a[1] === b[1];
 }
@@ -16,7 +16,7 @@ export function isPointInPoint(a: Vector2D, b: Vector2D): boolean {
  * left 	=> r[0][0]
  */
 
-export function isPointInRectangle(point: Vector2D, rectangle: Rectangle): boolean {
+export function isPointInRectangle(point: Point, rectangle: Rectangle): boolean {
 	return point[0] >= rectangle[0][0]
 		&& point[1] >= rectangle[0][1]
 		&& point[0] <= rectangle[1][0]
@@ -24,8 +24,8 @@ export function isPointInRectangle(point: Vector2D, rectangle: Rectangle): boole
 }
 
 export function isRectangleInRectangle(a: Rectangle, b: Rectangle): boolean {
-	return a[0][0] <= b[1][0]
-		&& a[1][0] >= b[0][0]
-		&& a[0][1] <= b[1][1]
-		&& a[1][1] >= b[0][1];
+	return a[0][0] < b[1][0]
+		&& a[1][0] > b[0][0]
+		&& a[0][1] < b[1][1]
+		&& a[1][1] > b[0][1];
 }
