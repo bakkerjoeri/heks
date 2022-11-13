@@ -92,6 +92,10 @@ export function calculateNewFrameIndex(
 	elapsedTime: number,
 	isLooping: boolean
 ): number {
+	if (framesPerSecond === 0) {
+		return 0;
+	}
+
 	if (isLooping) {
 		return (
 			Math.round(elapsedTime / (1000 / framesPerSecond)) % amountOfFrames
