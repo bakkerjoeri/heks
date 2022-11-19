@@ -1,5 +1,5 @@
-import { Position, Size } from "./types";
-import { getImage } from "./assets";
+import { Position, Size } from "./types.js";
+import { getImage } from "./assets.js";
 
 interface FontMetrics {
 	name: string;

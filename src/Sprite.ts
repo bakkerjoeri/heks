@@ -1,6 +1,6 @@
 import { multiplyByComponents } from "dotspace";
-import { Position, Size } from "./types";
-import { getImage } from "./assets";
+import type { Position, Size } from "./types.js";
+import { getImage } from "./assets.js";
 
 export interface SpriteFrame {
 	origin: Position;
