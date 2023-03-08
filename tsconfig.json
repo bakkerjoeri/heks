@@ -1,9 +1,9 @@
 {
 	"compilerOptions": {
 		"strict": true,
-		"moduleResolution": "nodenext",
-		"target": "es2020",
 		"module": "esnext",
+		"moduleResolution": "nodenext",
+		"target": "es6",
 		"lib": ["es2020", "dom", "dom.iterable", "scripthost"],
 		"rootDir": "src",
 		"outDir": "dist",

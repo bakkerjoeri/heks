@@ -26,7 +26,6 @@
 		"@types/jsdom": "^20.0.0",
 		"@typescript-eslint/eslint-plugin": "^5.42.0",
 		"@typescript-eslint/parser": "^5.42.0",
-		"@vue/compiler-sfc": "^3.2.41",
 		"canvas": "^2.10.2",
 		"eslint": "^8.26.0",
 		"eslint-plugin-import": "^2.26.0",
@@ -35,6 +34,7 @@
 		"prettier": "^2.7.1",
 		"rollup": "^3.2.5",
 		"ts-jest": "^29.0.3",
+		"ts-jest-resolver": "^2.0.0",
 		"tslib": "^2.4.1",
 		"typescript": "^4.8.4"
 	},
@@ -44,7 +44,7 @@
 		"@bakkerjoeri/object-without": "^1.0.1",
 		"@bakkerjoeri/uuid": "^1.0.0",
 		"@jest/fake-timers": "^29.2.2",
-		"dotspace": "^1.2.0",
+		"dotspace": "^1.4.0",
 		"jest-environment-jsdom": "^29.2.2"
 	}
 }

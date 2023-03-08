@@ -1,4 +1,13 @@
 export default {
-	preset: "ts-jest/presets/default-esm",
 	testEnvironment: "jsdom",
+	resolver: "ts-jest-resolver",
+	transform: {
+		"^.+\\.ts?$": [
+			"ts-jest",
+			{
+				useESM: true,
+			},
+		],
+	},
+	extensionsToTreatAsEsm: [".ts"],
 };

@@ -6,21 +6,25 @@ const imageCache: {
 	[path: string]: HTMLImageElement;
 } = {};
 
-export async function loadAssets(assets: Array<{
-	type: 'audio' | 'image';
-	url: string;
-}>): Promise<void> {
-	await Promise.all<HTMLAudioElement | HTMLImageElement>(assets.map(assetDefinition => {
-		if (assetDefinition.type === 'audio') {
-			return loadAudio(assetDefinition.url);
-		}
+export async function loadAssets(
+	assets: Array<{
+		type: "audio" | "image";
+		url: string;
+	}>
+): Promise<void> {
+	await Promise.all<HTMLAudioElement | HTMLImageElement>(
+		assets.map((assetDefinition) => {
+			if (assetDefinition.type === "audio") {
+				return loadAudio(assetDefinition.url);
+			}
 
-		if (assetDefinition.type === 'image') {
-			return loadImage(assetDefinition.url);
-		}
+			if (assetDefinition.type === "image") {
+				return loadImage(assetDefinition.url);
+			}
 
-		throw new Error(`Unsupported asset type ${assetDefinition.type}.`);
-	}));
+			throw new Error(`Unsupported asset type ${assetDefinition.type}.`);
+		})
+	);
 }
 
 export function getImage(url: string, fromCache = true): HTMLImageElement {
@@ -35,7 +39,10 @@ export function getImage(url: string, fromCache = true): HTMLImageElement {
 	return image;
 }
 
-export async function loadImage(url: string, fromCache = true): Promise<HTMLImageElement> {
+export async function loadImage(
+	url: string,
+	fromCache = true
+): Promise<HTMLImageElement> {
 	const image = getImage(url, fromCache);
 
 	return new Promise((resolve, reject) => {
@@ -47,14 +54,14 @@ export async function loadImage(url: string, fromCache = true): Promise<HTMLImag
 			resolve(image);
 			image.onload = null;
 			image.onerror = null;
-		}
+		};
 
 		image.onerror = (error) => {
 			reject(error);
 			image.onload = null;
 			image.onerror = null;
-		}
-	})
+		};
+	});
 }
 
 export function getAudio(url: string, fromCache = true): HTMLAudioElement {
@@ -69,7 +76,10 @@ export function getAudio(url: string, fromCache = true): HTMLAudioElement {
 	return audio;
 }
 
-export async function loadAudio(url: string, fromCache = true): Promise<HTMLAudioElement> {
+export async function loadAudio(
+	url: string,
+	fromCache = true
+): Promise<HTMLAudioElement> {
 	const audio = getAudio(url, fromCache);
 
 	return new Promise((resolve, reject) => {
@@ -78,7 +88,7 @@ export async function loadAudio(url: string, fromCache = true): Promise<HTMLAudi
 		}
 
 		audio.onload = () => {
-			resolve(audio)
+			resolve(audio);
 			audio.onload = null;
 			audio.onerror = null;
 		};
@@ -87,6 +97,6 @@ export async function loadAudio(url: string, fromCache = true): Promise<HTMLAudi
 			reject(error);
 			audio.onload = null;
 			audio.onerror = null;
-		}
+		};
 	});
 }
